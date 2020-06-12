@@ -1,1 +1,3 @@
-# Lightweight Commandline argument Parser
+# Lean Commandline argument Parser
+
+Simple C++ parser library for command line arguments.
