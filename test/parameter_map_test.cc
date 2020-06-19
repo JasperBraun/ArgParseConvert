@@ -61,9 +61,9 @@ SCENARIO("Positional arguments need to be parsed.",
 
   GIVEN("Arguments take single value and are not required.") {
     ParameterMap parameter_map{};
-    parameter_map(Parameter<WithConversion>::Positional("FOO", 1))
-           (Parameter<WithConversion>::Positional("BAR", 0))
-           (Parameter<WithoutConversion>::Positional("BAZ", 2, external_converter));
+    parameter_map(Parameter<WithConversion>::Positional({"FOO"}, 1))
+           (Parameter<WithConversion>::Positional({"BAR"}, 0))
+           (Parameter<WithoutConversion>::Positional({"BAZ"}, 2, external_converter));
 
     WHEN("Correct number of values are provided.") {
       InvalidArguments invalid_args;
@@ -121,10 +121,10 @@ SCENARIO("Positional arguments need to be parsed.",
   }
   GIVEN("Arguments take single value and some are required.") {
     ParameterMap parameter_map{};
-    parameter_map(Parameter<WithConversion>::Positional("FOO", 1))
-           (Parameter<WithConversion>::Positional("BAR", 0)
+    parameter_map(Parameter<WithConversion>::Positional({"FOO"}, 1))
+           (Parameter<WithConversion>::Positional({"BAR"}, 0)
                 .MinArgs(1))
-           (Parameter<WithoutConversion>::Positional("BAZ", 2, external_converter)
+           (Parameter<WithoutConversion>::Positional({"BAZ"}, 2, external_converter)
                 .MinArgs(1));
 
     WHEN("Correct number of values are provided.") {
@@ -186,13 +186,13 @@ SCENARIO("Positional arguments need to be parsed.",
   }
   GIVEN("Arguments take multiple values and are not required.") {
     ParameterMap parameter_map{};
-    parameter_map(Parameter<WithConversion>::Positional("FOO", 1)
+    parameter_map(Parameter<WithConversion>::Positional({"FOO"}, 1)
                 .MinArgs(2)
                 .MaxArgs(2))
-           (Parameter<WithConversion>::Positional("BAR", 0)
+           (Parameter<WithConversion>::Positional({"BAR"}, 0)
                 .MinArgs(2)
                 .MaxArgs(2))
-           (Parameter<WithoutConversion>::Positional("BAZ", 2, external_converter)
+           (Parameter<WithoutConversion>::Positional({"BAZ"}, 2, external_converter)
                 .MaxArgs(4));
 
     WHEN("Correct number of values are provided.") {
@@ -272,13 +272,13 @@ SCENARIO("Positional arguments need to be parsed.",
   }
   GIVEN("Arguments take multiple values and some are required.") {
     ParameterMap parameter_map{};
-    parameter_map(Parameter<WithConversion>::Positional("FOO", 1)
+    parameter_map(Parameter<WithConversion>::Positional({"FOO"}, 1)
                 .MinArgs(2)
                 .MaxArgs(2))
-           (Parameter<WithConversion>::Positional("BAR", 0)
+           (Parameter<WithConversion>::Positional({"BAR"}, 0)
                 .MinArgs(2)
                 .MaxArgs(2))
-           (Parameter<WithoutConversion>::Positional("BAZ", 2, external_converter)
+           (Parameter<WithoutConversion>::Positional({"BAZ"}, 2, external_converter)
                 .MinArgs(0)
                 .MaxArgs(4));
 
@@ -366,9 +366,9 @@ SCENARIO("Keyword arguments need to be parsed.",
 
   GIVEN("Arguments take single value and are not required.") {
     ParameterMap parameter_map{};
-    parameter_map(Parameter<WithConversion>::Keyword("--foo"))
-           (Parameter<WithConversion>::Keyword("--bar"))
-           (Parameter<WithoutConversion>::Keyword("baz", external_converter));
+    parameter_map(Parameter<WithConversion>::Keyword({"--foo"}))
+           (Parameter<WithConversion>::Keyword({"--bar"}))
+           (Parameter<WithoutConversion>::Keyword({"baz"}, external_converter));
 
     WHEN("Correct number of values are provided.") {
       InvalidArguments invalid_args;
@@ -448,10 +448,10 @@ SCENARIO("Keyword arguments need to be parsed.",
   }
   GIVEN("Arguments take single value and some are required.") {
     ParameterMap parameter_map{};
-    parameter_map(Parameter<WithConversion>::Keyword("--foo"))
-           (Parameter<WithConversion>::Keyword("--bar")
+    parameter_map(Parameter<WithConversion>::Keyword({"--foo"}))
+           (Parameter<WithConversion>::Keyword({"--bar"})
                 .MinArgs(1))
-           (Parameter<WithoutConversion>::Keyword("baz", external_converter)
+           (Parameter<WithoutConversion>::Keyword({"baz"}, external_converter)
                 .MinArgs(1));
 
     WHEN("Correct number of values are provided.") {
@@ -536,13 +536,13 @@ SCENARIO("Keyword arguments need to be parsed.",
   }
   GIVEN("Arguments take multiple values and are not required.") {
     ParameterMap parameter_map{};
-    parameter_map(Parameter<WithConversion>::Keyword("--foo")
+    parameter_map(Parameter<WithConversion>::Keyword({"--foo"})
                 .MinArgs(2)
                 .MaxArgs(2))
-           (Parameter<WithConversion>::Keyword("--bar")
+           (Parameter<WithConversion>::Keyword({"--bar"})
                 .MinArgs(2)
                 .MaxArgs(2))
-           (Parameter<WithoutConversion>::Keyword("baz", external_converter)
+           (Parameter<WithoutConversion>::Keyword({"baz"}, external_converter)
                 .MaxArgs(4));
 
     WHEN("Correct number of values are provided.") {
@@ -648,13 +648,13 @@ SCENARIO("Keyword arguments need to be parsed.",
   }
   GIVEN("Arguments take multiple values and some are required.") {
     ParameterMap parameter_map{};
-    parameter_map(Parameter<WithConversion>::Keyword("--foo")
+    parameter_map(Parameter<WithConversion>::Keyword({"--foo"})
                 .MinArgs(2)
                 .MaxArgs(2))
-           (Parameter<WithConversion>::Keyword("--bar")
+           (Parameter<WithConversion>::Keyword({"--bar"})
                 .MinArgs(2)
                 .MaxArgs(2))
-           (Parameter<WithoutConversion>::Keyword("baz", external_converter)
+           (Parameter<WithoutConversion>::Keyword({"baz"}, external_converter)
                 .MaxArgs(4)
                 .MinArgs(1));
 

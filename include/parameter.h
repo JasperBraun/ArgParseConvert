@@ -129,19 +129,9 @@ class Parameter {
   ///
   static Parameter<bool> Flag(const std::vector<std::string>& names);
 
-  /// @brief Creates a flag identified by `name`.
-  ///
-  static Parameter<bool> Flag(const std::string& name);
-
   /// @brief Creates a flag identified by `-c`.
   ///
   static Parameter<bool> Flag(char c);
-  
-  /// @brief Creates a positional parameter identified by `name`, with provided
-  ///  relative position and conversion function.
-  ///
-  static Parameter<ParameterType> Positional(std::string name, int position,
-      std::function<ParameterType(const std::string&)> converter);
 
   /// @brief Creates a positional parameter identified by `names`, with provided
   ///  relative position and conversion function.
@@ -151,12 +141,6 @@ class Parameter {
       int position,
       std::function<ParameterType(const std::string&)> converter);
 
-  /// @brief Creates a positional parameter identified by `name`, with provided
-  ///  relative position using `ParameterType's` static `from_string` function
-  ///  member as conversion function.
-  ///
-  static Parameter<ParameterType> Positional(std::string name, int position);
-
   /// @brief Creates a positional parameter identified by `names`, with provided
   ///  relative position using `ParameterType's` static `from_string` function
   ///  member as conversion function.
@@ -164,24 +148,12 @@ class Parameter {
   static Parameter<ParameterType> Positional(
       const std::vector<std::string>& names, int position);
 
-  /// @brief Creates a keyword parameter identified by `name`, with provided
-  ///  conversion function.
-  ///
-  static Parameter<ParameterType> Keyword(std::string name,
-      std::function<ParameterType(const std::string&)> converter);
-
   /// @brief Creates a keyword parameter identified by `names`, with provided
   ///  conversion function.
   ///
   static Parameter<ParameterType> Keyword(
       const std::vector<std::string>& names,
       std::function<ParameterType(const std::string&)> converter);
-
-  /// @brief Creates a keyword parameter identified by `name`, using
-  ///  `ParameterType's` static `from_string` function member as conversion
-  ///  function.
-  ///
-  static Parameter<ParameterType> Keyword(std::string name);
 
   /// @brief Creates a keyword parameter identified by `names`, using
   ///  `ParameterType's` static `from_string` function member as conversion
@@ -297,28 +269,12 @@ Parameter<ParameterType> Parameter<ParameterType>::Create(
 
 template <class ParameterType>
 Parameter<ParameterType> Parameter<ParameterType>::Positional(
-    std::string name,
-    int position,
-    std::function<ParameterType(const std::string&)> converter) {
-  return Parameter<ParameterType>::Positional(std::vector{name}, position, converter);
-}
-
-template <class ParameterType>
-Parameter<ParameterType> Parameter<ParameterType>::Positional(
     const std::vector<std::string>& names,
     int position,
     std::function<ParameterType(const std::string&)> converter) {
   ParameterConfiguration configuration = ParameterConfiguration::Create(
       names, ParameterCategory::kPositionalParameter, position);
   return Parameter<ParameterType>::Create(std::move(configuration), converter);
-}
-
-template <class ParameterType>
-Parameter<ParameterType> Parameter<ParameterType>::Positional(
-    std::string name, int position) {
-  std::function<ParameterType(const std::string&)> converter
-      = ParameterType::from_string;
-  return Parameter<ParameterType>::Positional(name, position, converter);
 }
 
 template <class ParameterType>
@@ -330,25 +286,12 @@ Parameter<ParameterType> Parameter<ParameterType>::Positional(
 }
 
 template <class ParameterType>
-Parameter<ParameterType> Parameter<ParameterType>::Keyword(std::string name,
-    std::function<ParameterType(const std::string&)> converter) {
-  return Parameter<ParameterType>::Keyword(std::vector{name}, converter);
-}
-
-template <class ParameterType>
 Parameter<ParameterType> Parameter<ParameterType>::Keyword(
     const std::vector<std::string>& names,
     std::function<ParameterType(const std::string&)> converter) {
   ParameterConfiguration configuration = ParameterConfiguration::Create(
       names, ParameterCategory::kKeywordParameter);
   return Parameter<ParameterType>::Create(std::move(configuration), converter);
-}
-
-template <class ParameterType>
-Parameter<ParameterType> Parameter<ParameterType>::Keyword(std::string name) {
-  std::function<ParameterType(const std::string&)> converter
-      = ParameterType::from_string;
-  return Parameter<ParameterType>::Keyword(name, converter);
 }
 
 template <class ParameterType>
@@ -368,17 +311,13 @@ Parameter<bool> Parameter<ParameterType>::Flag(
 }
 
 template <class ParameterType>
-Parameter<bool> Parameter<ParameterType>::Flag(const std::string& name) {
-  std::vector<std::string> names{name};
-  return Parameter<ParameterType>::Flag(names);
-}
-
-template <class ParameterType>
 Parameter<bool> Parameter<ParameterType>::Flag(char c) {
   std::string name;
+  std::vector<std::string> names;
   name.push_back('-');
   name.push_back(c);
-  return Parameter<ParameterType>::Flag(name);
+  names.push_back(name);
+  return Parameter<ParameterType>::Flag(names);
 }
 
 } // namespace arg_parse_convert
