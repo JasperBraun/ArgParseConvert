@@ -46,7 +46,7 @@ std::string ParameterConfiguration::HelpString(const HelpStringFormat& format) {
       static_cast<size_t>(format.parameter_indentation()), ' ');
   std::string description_spacer(
       static_cast<size_t>(format.description_indentation()), ' ');
-  if (this->category_ != ParameterCategory::kPositional) {
+  if (this->category_ != ParameterCategory::kPositionalParameter) {
     ss << parameter_spacer << this->names_.at(0);
     for (size_t i = 1; i < this->names_.size(); ++i) {
       ss << " | " << this->names_.at(i);
