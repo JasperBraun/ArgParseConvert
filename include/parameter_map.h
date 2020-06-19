@@ -80,7 +80,7 @@ class ParameterMap {
   /// @details Throws exception of type `exceptions::UnknownParameterName` if
   ///  no parameter with name `name` was registered with the object.
   ///
-  inline bool has_argument(const std::string& name) {
+  inline bool HasArgument(const std::string& name) {
     if (GetId(name) < arguments_.size() && arguments_.at(GetId(name)).size() > 0) {
       return true;
     } else {
@@ -151,7 +151,8 @@ class ParameterMap {
   ///  correspond to a flag with name `name` registered with the object.
   ///
   inline bool IsSet(char c) const {
-    std::string name{"-"};
+    std::string name;
+    name.push_back('-');
     name.push_back(c);
     size_t id{GetId(name)};
     std::stringstream error_message;
