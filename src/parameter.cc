@@ -46,12 +46,15 @@ std::string ParameterConfiguration::HelpString(const HelpStringFormat& format) {
       static_cast<size_t>(format.parameter_indentation()), ' ');
   std::string description_spacer(
       static_cast<size_t>(format.description_indentation()), ' ');
-  ss << parameter_spacer << this->names_.at(0);
-  for (size_t i = 1; i < this->names_.size(); ++i) {
-    ss << " | " << this->names_.at(i);
+  if (this->category_ != ParameterCategory::kPositional) {
+    ss << parameter_spacer << this->names_.at(0);
+    for (size_t i = 1; i < this->names_.size(); ++i) {
+      ss << " | " << this->names_.at(i);
+    }
+    ss << ' ';
   }
   if (this->category_ != ParameterCategory::kFlag) {
-    ss << ' ' << this->argument_placeholder_;
+    ss << this->argument_placeholder_;
     if (this->default_arguments_.size() > 0) {
       ss << " ( =";
       for (const std::string& argument : this->default_arguments_) {
