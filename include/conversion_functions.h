@@ -31,6 +31,8 @@ namespace arg_parse_convert {
 // Placeholder that is only used for flags. Never actually evaluated.
 inline bool FlagConverter(const std::string& s) {return true;}
 
+inline std::string StringIdentity(const std::string& s) {return s;}
+
 inline int stoi(const std::string& s) {return std::stoi(s);}
 inline long stol(const std::string& s) {return std::stol(s);}
 inline long long stoll(const std::string& s) {return std::stoll(s);}
