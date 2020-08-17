@@ -1,4 +1,5 @@
 # Project exclude paths
 /build/
+/debug/
 /bin/
 /doc/doxygen/

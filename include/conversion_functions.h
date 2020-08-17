@@ -24,9 +24,9 @@
 #include <functional>
 #include <string>
 
-#include "exceptions.h"
-
 namespace arg_parse_convert {
+
+namespace converters {
 
 // Placeholder that is only used for flags. Never actually evaluated.
 inline bool FlagConverter(const std::string& s) {return true;}
@@ -41,6 +41,8 @@ inline unsigned long long stoull(const std::string& s) {return std::stoull(s);}
 inline float stof(const std::string& s) {return std::stof(s);}
 inline double stod(const std::string& s) {return std::stod(s);}
 inline long double stold(const std::string& s) {return std::stold(s);}
+
+} // namespace stl_converters
 
 } // namespace arg_parse_convert
 

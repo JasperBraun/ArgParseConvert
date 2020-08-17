@@ -23,423 +23,357 @@
 
 #include <any>
 #include <map>
-#include <sstream>
-#include <string>
-#include <typeinfo>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
+#include "exceptions.h"
 #include "parameter.h"
 
 namespace arg_parse_convert {
 
-struct InvalidArguments {
-  std::vector<std::string> additional_arguments;
-  std::vector<std::string> unfilled_parameters;
+/// @addtogroup ArgParseConvert-Reference
+///
+/// @{
 
-  inline bool empty() {
-    return (additional_arguments.empty() && unfilled_parameters.empty());
-  }
-};
-
+/// @brief A `ParameterMap` stores the configurations of parameters.
+///
+/// @details The different parameters stored in a `ParameterMap` are identified
+///  by their respective names, or alternatively a unique integer-identifier.
+///  Each parameter has a `ParameterConfiguration` object and a conversion
+///  function associated with it.
+///
+/// @invariant The size of the object is equal to the number of
+///  `ParameterConfiguration` objects stored in the map, or equivalently, is
+///  equal to the number of conversion functions stored in the map.
+///
+/// @invariant The stored string-identifiers consist of the collection of all
+///  names listed by the stored `ParameterConfiguration` objects and the
+///  corresponding integers are the integer identifiers of the objects and their
+///  respective associated conversion functions.
+///
 class ParameterMap {
+
  public:
+  using size_type = std::vector<ParameterConfiguration>::size_type;
   /// @name Constructors:
   ///
   /// @{
-  
+
+  /// @brief Default constructor.
+  ///
   ParameterMap() = default;
 
-  ParameterMap(HelpStringFormat format) : help_string_format_{format} {}
-
-  ParameterMap(int help_string_width, int parameter_indentation,
-               int description_indentation)
-      : help_string_format_{HelpStringFormat{help_string_width,
-                                             parameter_indentation,
-                                             description_indentation}} {}
-
+  /// @brief Copy constructor.
+  ///
   ParameterMap(const ParameterMap& other) = default;
-  ParameterMap(ParameterMap&& other) = default;
+
+  /// @brief Move constructor.
+  ///
+  ParameterMap(ParameterMap&& other) noexcept = default;
   /// @}
   
   /// @name Assignment:
   ///
   /// @{
   
+  /// @brief Copy assignment.
+  ///
   ParameterMap& operator=(const ParameterMap& other) = default;
-  ParameterMap& operator=(ParameterMap&& other) = default;
+
+  /// @brief Move assignment.
+  ///
+  ParameterMap& operator=(ParameterMap&& other) noexcept = default;
   /// @}
 
   /// @name Accessors:
   ///
   /// @{
 
-  /// @brief Indicates if at least one argument was assigned to parameter with
-  ///  name `name`.
+  /// @brief Returns the number of arguments stored in the object.
   ///
-  /// @details Throws exception of type `exceptions::UnknownParameterName` if
-  ///  no parameter with name `name` was registered with the object.
+  /// @exceptions Strong guarantee.
   ///
-  inline bool has_argument(const std::string& name) {
-    if (GetId(name) < arguments_.size() && arguments_.at(GetId(name)).size() > 0) {
-      return true;
-    } else {
-      return false;
+  inline size_type size() const {
+    return parameter_configurations_.size();
+  }
+
+  /// @brief Returns integer-identifier for parameter with string-identifier
+  ///  `name`.
+  ///
+  /// @exceptions Strong guarantee. Throws `exceptions::ParameterAccessError` if
+  ///  object contains no parameter identified by `name`.
+  ///
+  inline int GetId(const std::string& name) const {
+    std::stringstream error_message;
+    try {
+      return name_to_id_.at(name);
+    } catch (const std::out_of_range& e) {
+      error_message << "Unable to find parameter named: '" << name << "'.";
+      throw exceptions::ParameterAccessError(error_message.str());
     }
   }
 
-  /// @brief Returns value of converter associated to registered parameter with
-  ///  name `name` evaluated at its first parsed argument.
+  /// @brief Returns primary string-identifier for parameter with
+  ///  integer-identifier `id`.
   ///
-  /// @details `ParameterType` must be the correct type associated with the
-  ///  parameter. Throws exception of type `exceptions::UnknownParameterName` if
-  ///  no parameter with name `name` was registered with the object. Throws
-  ///  exception of type `exceptions::MismatchedParameterType` if `name` was
-  ///  registered with the object, but as parameter of type `ParameterType`.
-  ///  Throws exception of type `exceptions::UnfilledParameter` if no argument
-  ///  was parsed for the parameter unless the parameter is a flag. Throws
-  ///  exception of type `exceptions::InvalidFlagConversion` if `name` is the
-  ///  name of a flag.
+  /// @details The primary string-identifier associated with a parameter is the
+  ///  first string-identifier provided during its construction.
   ///
-  template <class ParameterType>
-  ParameterType convert(const std::string& name) const;
-
-  /// @brief Returns the list of values of converter associated to registered
-  ///  parameter with name `name` evaluated at all of its parsed arguments.
+  /// @exceptions Strong guarantee. Throws `exceptions::ParameterAccessError` if
+  ///  object contains no parameter identified by `id`.
   ///
-  /// @details `ParameterType` must be the correct type associated with the
-  ///  parameter. Throws exception of type `exceptions::UnknownParameterName` if
-  ///  no parameter with name `name` was registered with the object. Throws
-  ///  exception of type `exceptions::MismatchedParameterType` if `name` was
-  ///  registered with the object, but as parameter of type `ParameterType`.
-  ///  Throws exception of type `exceptions::InvalidFlagConversion` if `name` is
-  ///  the name of a flag. Returns empty list if no argument was parsed for the
-  ///  parameter.
-  ///
-  template <class ParameterType>
-  std::vector<ParameterType> convert_all(const std::string& name) const;
-
-  /// @brief Returns whether or not the flag named `name` is set.
-  ///
-  /// @details Throws exception of type `exceptions::UnknownParameterName` if
-  ///  no parameter with name `name` was registered with the object. Throws
-  ///  exception of type `exceptions::NoFlagWithName` if the name does not
-  ///  correspond to a flag with name `name` registered with the object.
-  ///
-  inline bool IsSet(const std::string& name) const {
-    size_t id{GetId(name)};
+  inline const std::string& GetPrimaryName(int id) const {
     std::stringstream error_message;
-    if (parameter_configurations_.at(id).category()
-        != ParameterCategory::kFlag) {
-      error_message << "Parameter with name: '" << name << "' is not a flag."
-                    << " Call `ParameterMap::IsSet` only to check if a flag is"
-                    << " set." << std::endl;
-      throw exceptions::NoFlagWithName(error_message.str());
-    }
-    if (arguments_.at(id).size() > 0) {
-      return true;
-    } else {
-      return false;
+    try {
+      return parameter_configurations_.at(id).names().at(0);
+    } catch (const std::out_of_range& e) {
+      error_message << "Unable to find parameter with id: '" << id << "'.";
+      throw exceptions::ParameterAccessError(error_message.str());
     }
   }
 
-  /// @brief Returns whether or not the flag named `-c` is set.
+  /// @brief Returns `ParameterConfiguration` object associated with the
+  ///  parameter identified by `name`.
   ///
-  /// @details Throws exception of type `exceptions::UnknownParameterName` if
-  ///  no parameter with name `name` was registered with the object. Throws
-  ///  exception of type `exceptions::NoFlagWithName` if the name does not
-  ///  correspond to a flag with name `name` registered with the object.
+  /// @exceptions Strong guarantee. Throws `exceptions::ParameterAccessError` if
+  ///  object contains no parameter identified by `name`.
   ///
-  inline bool IsSet(char c) const {
-    std::string name{"-"};
-    name.push_back(c);
-    size_t id{GetId(name)};
+  inline const ParameterConfiguration& GetConfiguration(
+      const std::string& name) const {
     std::stringstream error_message;
-    if (parameter_configurations_.at(id).category()
-        != ParameterCategory::kFlag) {
-      error_message << "Parameter with name: '" << name << "' is not a flag."
-                    << " Call `ParameterMap::IsSet` only to check if a flag is"
-                    << " set." << std::endl;
-      throw exceptions::NoFlagWithName(error_message.str());
+    try {
+      return parameter_configurations_.at(GetId(name));
+    } catch (const std::out_of_range& e) {
+      error_message << "Unable to find parameter with name: '" << name << "'.";
+      throw exceptions::ParameterAccessError(error_message.str());
     }
-    if (arguments_.at(id).size() > 0) {
-      return true;
-    } else {
-      return false;
-    }
+  }
+
+  /// @brief Returns conversion function associated with the parameter
+  ///  identified by `name`.
+  ///
+  /// @exceptions Strong guarantee. Throws `exceptions::ParameterAccessError` if
+  ///  * object contains no parameter identified by `name`. 
+  ///  * `ParameterType` is not the type of the parameter identified by `name`.
+  ///
+  template <class ParameterType>
+  std::function<ParameterType(const std::string&)>
+  ConversionFunction(const std::string& name) const;
+  
+  /// @brief Returns integer-identifiers for the contained required parameters.
+  ///
+  /// @exceptions Strong guarantee.
+  ///
+  inline const std::unordered_set<int>& required_parameters() const {
+    return required_parameters_;
+  }
+
+  /// @brief Returns integer-identifiers for the contained positional parameters
+  ///  ordered by their associated position.
+  ///
+  /// @exceptions Strong guarantee.
+  ///
+  inline const std::map<int, int>& positional_parameters() const {
+    return positional_parameters_;
+  }
+
+  /// @brief Returns integer-identifiers for the contained keyword parameters.
+  ///
+  /// @exceptions Strong guarantee.
+  ///
+  inline const std::unordered_set<int>& keyword_parameters() const {
+    return keyword_parameters_;
+  }
+
+  /// @brief Returns integer-identifiers of the contained flags.
+  ///
+  /// @exceptions Strong guarantee.
+  ///
+  inline const std::unordered_set<int>& flags() const {
+    return flags_;
   }
   /// @}
 
   /// @name Mutators:
   ///
   /// @{
-  
-  /// @brief Registers `parameter` with the object.
+
+  /// @brief Inserts `parameter` into the object.
   ///
-  /// @details Throws exception of type `exceptions::DuplicateParameterName` if
-  ///  a parameter of the same name was already registered.
+  /// @details Returns a reference to the object after `parameter` was inserted.
+  ///
+  /// @exceptions Strong guarantee.
+  ///  * Throws `exceptions::ParameterRegistrationError` when:
+  ///    - `ParameterConfiguration` member of `parameter` contains no names
+  ///      (i.e. `parameter.configuration.names().empty()` == true).
+  ///    - One of `parameter`'s names is already taken by another parameter
+  ///      contained in the object.
+  ///    - `parameter` is a positional parameter and its position is already
+  ///      taken by another parameter contained in the object.
+  ///  * Constructor of `parameter`'s conversion function may throw.
   ///
   template<class ParameterType>
   ParameterMap& operator()(Parameter<ParameterType> parameter);
-
-  /// @brief Assigns members of `argv` to the parameters registered with the
-  ///  object.
-  ///
-  /// @details From left-to-right, a keyword parameter is assigned all arguments
-  ///  immediately following its keyword until either its maximum argument
-  ///  number is reached, or the name of a flag or keyword of a keyword
-  ///  parameter is encountered. Any flags set the value of the flag to true,
-  ///  regardless of how often the flag appears. Function attempts to assign all
-  ///  remaining arguments to positional parameters from left to right. Each
-  ///  positional parameter's argument list ends if a flag, a keywords of a
-  ///  keyword parameter, or the maximum number of arguments of the positional
-  ///  parameter is reached. The return object lists all remaining arguments in
-  ///  its `additional_arguments` data member. All parameters for which fewer
-  ///  arguments than their minimum argument number were parsed, are listed in
-  ///  the return object's `unfilled_parameters` data member. Throws exception
-  ///  of type `exceptions::UnkownFlagOrKeyword` if an argument appears that
-  ///  begins with the character '-' and is neither the keyword of a keyword
-  ///  parameter nor a list of valid flags.
-  ///
-  InvalidArguments parse(int argc, const char** argv);
-
-  /// @brief Sets the help string's header.
-  ///
-  /// @see HelpString().
-  ///
-  inline void SetHelpStringHeader(const std::string& header) {
-    help_string_format_.header(header);
-  }
-
-  /// @brief Sets the help string's header.
-  ///
-  /// @see HelpString().
-  ///
-  inline void SetHelpStringHeader(std::string&& header) {
-    help_string_format_.header(header);
-  }
-
-  /// @brief Sets the help string's footer.
-  ///
-  /// @see HelpString().
-  ///
-  inline void SetHelpStringFooter(const std::string& footer) {
-    help_string_format_.header(footer);
-  }
-
-  /// @brief Sets the help string's footer.
-  ///
-  /// @see HelpString().
-  ///
-  inline void SetHelpStringFooter(std::string&& footer) {
-    help_string_format_.header(footer);
-  }
-
-  /// @brief Sets the help string's width.
-  ///
-  /// @see HelpString().
-  ///
-  inline void SetHelpStringWidth(int width) {
-    help_string_format_.width(width);
-  }
-
-  /// @brief Sets the help string's parameter indentation.
-  ///
-  /// @see HelpString().
-  ///
-  inline void SetHelpStringParameterIndentation(int width) {
-    help_string_format_.parameter_indentation(width);
-  }
-
-  /// @brief Sets the help string's description indentation.
-  ///
-  /// @see HelpString().
-  ///
-  inline void SetHelpStringDescriptionIndentation(int width) {
-    help_string_format_.description_indentation(width);
-  }
-
-  /// @brief Sets the help string's formatting.
-  ///
-  inline void SetHelpStringFormat(HelpStringFormat value) {
-    help_string_format_ = value;
-  }
-  /// @}
-
-  /// @name Other:
-  ///
-  /// @{
-  
-  /// @brief Returns a formatted help string derived from the registered
-  ///  parameters and the set header, footer, with and indentations.
-  ///
-  /// @details The help string consists of the set footer followed by
-  ///  help strings of all parameters registered with the object and finally the
-  ///  set header. The parameters are printed in categories in the order
-  ///  positional parameters, keyword parameters, and flags.
-  /// @see `Parameter::HelpString`, `SetHelpStringHeader`,
-  ///  `SetHelpStringFooter`, `SetHelpStringWidth`,
-  ///  `SetHelpStringParamterIndentation`, and
-  ///  `SetHelpStringDescriptionIndentation`.
-  ///
-  std::string HelpString();
   /// @}
 
  private:
-  inline size_t GetId(const std::string& name) const {
-    std::stringstream error_message;
-    if (name_to_id_.count(name)) {
-      return name_to_id_.at(name);
-    } else {
-      error_message << "Parameter with name: '" << name << "' was never"
-                    << " registered. Cannot access unregistered parameters."
-                    << std::endl;
-      throw exceptions::UnknownParameterName(error_message.str());
-    }
-  }
-  // Returns true if parameter reached its maximum number of arguments.
-  inline bool AddArgument(size_t id, const std::string& argument) {
-    arguments_.at(id).push_back(argument);
-    return (parameter_configurations_.at(id).max_num_arguments() > 0
-            && arguments_.at(id).size()
-                == parameter_configurations_.at(id).max_num_arguments());
-  }
-  // Assumes that `id` is id of a flag.
-  inline void SetFlag(size_t id) {
-    // Flag conversion function returns true if flag has at least one argument.
-    arguments_.at(id).push_back("true");
-  }
-  // Sets default arguments if they were provided and no arguments are assigned.
-  inline void SetDefaultArgumentsIfNeeded(size_t id) {
-    if (arguments_.at(id).size() == 0
-        && parameter_configurations_.at(id).default_arguments().size() > 0) {
-      arguments_.at(id) = parameter_configurations_.at(id).default_arguments();
-    }
-  }
-  inline bool IsUnfilled(size_t id) {
-    return (arguments_.at(id).size()
-            < parameter_configurations_.at(id).min_num_arguments());
-  }
-  inline void AddParameterToCategory(size_t id, ParameterCategory category,
-                                     int position) {
-    std::stringstream error_message;
-    switch (category) {
-      case ParameterCategory::kPositionalParameter: {
-        positional_parameters_.insert({position, id});
-        break;
-      }
-      case ParameterCategory::kKeywordParameter: {
-        keyword_parameters_.insert(id);
-        break;
-      }
-      case ParameterCategory::kFlag: {
-        flags_.insert(id);
-        break;
-      }
-      default: {
-        error_message << "Unable to determine parameter's category: '"
-                      << static_cast<int>(category) << "' in"
-                      << "`ParameterMap::AddParameterInCategory`; cases should"
-                      << " be exhaustive." << std::endl;
-        throw exceptions::internal::UnexpectedCase(error_message.str());
-      }
-    }
-  }
-  std::unordered_map<std::string, size_t> name_to_id_;
+  
+  /// @brief Map of string-identifiers to integer-identifiers of parameters
+  ///  stored in the object.
+  ///
+  /// @details Each parameter is identified in the other data members of the
+  ///  object by its integer-identifier.
+  ///
+  std::unordered_map<std::string, int> name_to_id_;
+
+  /// @brief Configurations of parameters stored in the object.
+  ///
+  /// @details Parameters' integer identifiers are the positions of the
+  ///  associated `ParameterConfiguration` objects.
+  ///
   std::vector<ParameterConfiguration> parameter_configurations_;
+
+  /// @brief Conversion functions of parameters stored in the object.
+  ///
+  /// @details Parameters' integer identifiers are the positions of the
+  ///  associated `ParameterConfiguration` objects.
+  ///
   std::vector<std::any> converters_;
 
-  std::vector<std::vector<std::string>> arguments_;
+  /// @brief Contains integer-identifiers of required parameters.
+  ///
+  std::unordered_set<int> required_parameters_;
 
-  // Positional parameters are ordered by position.
-  std::map<int, size_t> positional_parameters_;
-  std::unordered_set<size_t> keyword_parameters_;
-  std::unordered_set<size_t> flags_;
+  /// @brief Orders integer-identifiers of positional parameters by position.
+  ///
+  std::map<int, int> positional_parameters_;
 
-  HelpStringFormat help_string_format_;
+  /// @brief Contains integer-identifiers of keyword parameters.
+  ///
+  std::unordered_set<int> keyword_parameters_;
+
+  /// @brief Contains integer-identifiers of flags.
+  ///
+  std::unordered_set<int> flags_;
 };
+/// @}
 
+// ParameterMap::ConversionFunction()
+//
 template <class ParameterType>
-ParameterType ParameterMap::convert(const std::string& name) const {
-  size_t id{GetId(name)}; // may throw
-  std::function<ParameterType(const std::string&)> converter;
+std::function<ParameterType(const std::string&)>
+ParameterMap::ConversionFunction(const std::string& name) const {
   std::stringstream error_message;
-  if (flags_.count(id)) {
-    error_message << "Attempted to use `ParameterMap::convert` to check if flag"
-                  << " named: '" << name << "' was set. Use"
-                  << " `ParameterMap::IsSet` instead." << std::endl;
-    throw exceptions::InvalidFlagConversion(error_message.str());
-  }
   try {
-    converter =
-        std::any_cast<std::function<ParameterType(const std::string&)>>
-            (converters_.at(id));
+    // Note placement of * and & here to obtain const reference.
+    return std::any_cast<std::function<ParameterType(const std::string&)>>(
+        converters_.at(GetId(name)));
+  } catch (const std::out_of_range& e) {
+    error_message << "Expected the name of a parameter contained in the"
+                  << " object. No parameter with name: '" << name << "' was"
+                  << " found.";
+    throw exceptions::ParameterAccessError(error_message.str());
   } catch (const std::bad_any_cast& e) {
-    error_message << "Attempted to access parameter with name: '" << name
-                  << "' and type: '"
-                  << converters_.at(id).type().name() << "' as type: '"
-                  << typeid(ParameterType).name() << "'." << std::endl;
-    throw exceptions::MismatchedParameterType(error_message.str());
+    error_message << "Expected the argument to match the original `Parameter`"
+                  << " object's template argument. Function was called with:"
+                  << " '" << typeid(ParameterType).name() << "', but original"
+                  << " `Parameter` object has conversion function type"
+                  << converters_.at(GetId(name)).type().name() << "'.";
+    throw exceptions::ParameterAccessError(error_message.str());
   }
-  if (arguments_.at(id).size() <= 0) {
-    error_message << "Attempted to access argument of parameter with name: '"
-                  << name << "', but none was parsed." << std::endl;
-    throw exceptions::UnfilledParameter(error_message.str());
-  }
-  return converter(arguments_.at(id)[0]);
 }
 
-template <class ParameterType>
-std::vector<ParameterType> ParameterMap::convert_all(const std::string& name) const {
-  std::vector<ParameterType> result;
-  size_t id{GetId(name)}; // may throw
-  std::function<ParameterType(const std::string&)> converter;
-  std::stringstream error_message;
-  if (flags_.count(id)) {
-    error_message << "Attempted to use `ParameterMap::convert_all` to check if"
-                  << " flag named: '" << name << "' was set. Use"
-                  << " `ParameterMap::IsSet` instead." << std::endl;
-    throw exceptions::InvalidFlagConversion(error_message.str());
-  } else {
-    try {
-      converter =
-          std::any_cast<std::function<ParameterType(const std::string&)>>
-              (converters_.at(id));
-    } catch (const std::bad_any_cast& e) {
-      error_message << "Attempted to access parameter with name: '" << name
-                    << "' and type: '"
-                    << converters_.at(id).type().name() << "' as type: '"
-                    << typeid(ParameterType).name() << "'." << std::endl;
-      throw exceptions::MismatchedParameterType(error_message.str());
-    }
-    for (const std::string& argument : arguments_.at(id)) {
-      result.push_back(converter(argument));
-    }
-  }
-  return result;
-}
-
+// ParameterMap::operator()
+//
 template<class ParameterType>
 ParameterMap& ParameterMap::operator()(Parameter<ParameterType> parameter) {
-  size_t id;
-  std::string name;
+  int id{static_cast<int>(parameter_configurations_.size())};
+  std::vector<std::string> names{parameter.configuration().names()};
+  std::any converter{
+      std::make_any<std::function<ParameterType(const std::string&)>>(
+          std::move(parameter.converter()))};
+  ParameterCategory parameter_category{parameter.configuration().category()};
+  int parameter_position{parameter.configuration().position()};
   std::stringstream error_message;
-  id = parameter_configurations_.size();
-  for (const std::string& name : parameter.configuration().names()) {
+  int other_id;
+
+  // Preconditions.
+  if (names.empty()) {
+    error_message << "Parameter must be given at least one name.";
+    throw exceptions::ParameterRegistrationError(error_message.str());
+  }
+  for (const std::string& name : names) {
     if (name_to_id_.count(name)) {
-      error_message << "Parameter named: '" << name << "' already exists."
-                    << " Choose unique parameter names." << std::endl;
-      throw exceptions::DuplicateParameterName(error_message.str());
+      error_message << "Name '" << name << "' already taken by another"
+                    << " parameter.";
+      throw exceptions::ParameterRegistrationError(error_message.str());
     }
   }
-  for (size_t i = 0; i < parameter.configuration().names().size(); ++i) {
-    name = parameter.configuration().names().at(i);
-    name_to_id_.insert({name, id});
+  if (parameter_category == ParameterCategory::kPositionalParameter
+      && positional_parameters_.count(parameter_position)) {
+
+    other_id = positional_parameters_.at(parameter_position);
+    error_message << "Position '" << parameter_position << "' for parameter"
+                  << " named '" << names.at(0)
+                  << "' already taken by parameter named: '"
+                  << parameter_configurations_.at(other_id).names().at(0)
+                  << "'.";
+    throw exceptions::ParameterRegistrationError(error_message.str());
   }
-  parameter_configurations_.push_back(parameter.configuration());
-  converters_.push_back(parameter.converter());
-  AddParameterToCategory(id, parameter.configuration().category(),
-                         parameter.configuration().position());
+
+  // Reserve space to trigger exceptions before modifying
+  // Move constructor of std::function isn't 'noexcept' until C++20, swap is.
+  converters_.emplace_back();
+  name_to_id_.reserve(name_to_id_.size() + names.size());
+  parameter_configurations_.reserve(parameter_configurations_.size() + 1);
+  converters_.reserve(converters_.size() + 1);
+  if (parameter.configuration().IsRequired()) {
+    required_parameters_.reserve(required_parameters_.size() + 1);
+  }
+  switch (parameter_category) {
+    case ParameterCategory::kKeywordParameter: {
+      keyword_parameters_.reserve(keyword_parameters_.size() + 1);
+      break;
+    }
+    case ParameterCategory::kFlag: {
+      flags_.reserve(flags_.size() + 1);
+      break;
+    }
+    default: {
+      // Positional parameters are inserted into std::map; no reserve needed.
+    }
+  }
+
+  // Insert names.
+  for (std::string& name : names) {
+    name_to_id_.emplace(std::move(name), id);
+  }
+  // Insert converter.
+  converters_.back().swap(converter);
+  // Insert into appropriate categories.
+  if (parameter.configuration().IsRequired()) {
+    required_parameters_.emplace(id);
+  }
+  switch (parameter_category) {
+    case ParameterCategory::kPositionalParameter: {
+      positional_parameters_.emplace(parameter_position, id);
+      break;
+    }
+    case ParameterCategory::kKeywordParameter: {
+      keyword_parameters_.emplace(id);
+      break;
+    }
+    case ParameterCategory::kFlag: {
+      flags_.emplace(id);
+      break;
+    }
+    default: {
+      // Already handled above.
+    }
+  }
+  // Insert configuration object.
+  parameter_configurations_.emplace_back(std::move(parameter.configuration()));
   return *this;
 }
 

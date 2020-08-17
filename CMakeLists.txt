@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
+#[[
 # library
 project(arg_parse_convert)
 
@@ -12,7 +13,7 @@ add_library(arg_parse_convert
         "${CMAKE_CURRENT_SOURCE_DIR}/src/parameter_map.cc")
 target_include_directories(arg_parse_convert PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/include")
-
+]]
 # unit tests
 project(arg_parse_convert_test)
 include(CTest)
