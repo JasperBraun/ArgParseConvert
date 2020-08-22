@@ -18,43 +18,52 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ARG_PARSE_CONVERT_ARG_PARSE_CONVERT_H_
-#define ARG_PARSE_CONVERT_ARG_PARSE_CONVERT_H_
-
-#include "argument_map.h"
-#include "conversion_functions.h"
-#include "exceptions.h"
-//#include "help_string_format.h"
 #include "parameter.h"
-#include "parameter_map.h"
-//#include "parsers.h"
 
-/// @defgroup ArgParseConvert-Reference
-///
-/// @{
+#include <sstream>
 
-/// @brief Library namespace.
-///
-/// @details All types and functions defined by the library reside inside this
-///  namespace.
-///
-namespace arg_parse_convert {}
+namespace arg_parse_convert {
 
-/// @brief Contains library-specific exceptions.
-///
-/// @details All non-STL exceptions thrown by library functions are derived
-///  from `BaseError`.
-///
-namespace arg_parse_convert::exceptions {}
+namespace {
 
-/// @brief Contains common conversion functions.
-///
-/// @details For compatibility,  wrappers around standard library string
-///  conversion functions contained in this namespace must be used as conversion
-///  functions instead of using the corresponding standad library functions
-///  directly.
-///
-namespace arg_parse_convert::converters {}
-/// @}
+// Maps integers to string representation of `ParameterConfiguration`
+// enumerators
+//
+const char* kParameterCategory[]{
+  "kPositionalParameter",
+  "kKeywordParameter",
+  "kFlag"
+};
 
-#endif // ARG_PARSE_CONVERT_ARG_PARSE_CONVERT_H_
+}
+
+// ParameterConfiguration::DebugString
+//
+std::string ParameterConfiguration::DebugString() const {
+  std::stringstream ss;
+  ss << "{names: [";
+  if (!names_.empty()) {
+    ss << names_.at(0);
+    for (const std::string& name : names_) {
+      ss << ", " << name;
+    }
+  }
+  ss << "], category: "
+     << kParameterCategory[static_cast<int>(category_)]
+     << ", default arguments: [";
+  if (!default_arguments_.empty()) {
+    ss << default_arguments_.at(0);
+    for (const std::string& argument : default_arguments_) {
+      ss << ", " << argument;
+    }
+  }
+  ss << "], position: " << position_
+     << ", min number of arguments: " << min_num_arguments_
+     << ", max number of arguments: " << max_num_arguments_
+     << ", description: " << description_
+     << ", argument placeholder: " << argument_placeholder_
+     << "}.";
+  return ss.str();
+}
+
+} // namespace arg_parse_convert

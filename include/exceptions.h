@@ -53,6 +53,12 @@ struct ParameterRegistrationError final : public BaseError {
   using BaseError::BaseError;
 };
 
+/// @brief Exception thrown while obtaining parameter value(s).
+///
+struct ValueAccessError final : public BaseError {
+  using BaseError::BaseError;
+};
+
 /*
 
 /// @brief Exception thrown while parsing arguments.
@@ -64,12 +70,6 @@ struct ArgumentParsingError final : public BaseError {
 /// @brief Exception thrown while generating help-strings.
 ///
 struct HelpStringError final : public BaseError {
-  using BaseError::BaseError;
-};
-
-/// @brief Exception thrown while obtaining parameter value(s).
-///
-struct ValueAccessError final : public BaseError {
   using BaseError::BaseError;
 };
 */

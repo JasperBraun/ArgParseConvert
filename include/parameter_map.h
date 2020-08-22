@@ -150,6 +150,22 @@ class ParameterMap {
     }
   }
 
+  /// @brief Returns `ParameterConfiguration` object associated with the
+  ///  parameter identified by `id`.
+  ///
+  /// @exceptions Strong guarantee. Throws `exceptions::ParameterAccessError` if
+  ///  object contains no parameter identified by `id`.
+  ///
+  inline const ParameterConfiguration& GetConfiguration(size_type id) const {
+    std::stringstream error_message;
+    try {
+      return parameter_configurations_.at(id);
+    } catch (const std::out_of_range& e) {
+      error_message << "Unable to find parameter with id: '" << id << "'.";
+      throw exceptions::ParameterAccessError(error_message.str());
+    }
+  }
+
   /// @brief Returns conversion function associated with the parameter
   ///  identified by `name`.
   ///
@@ -215,6 +231,17 @@ class ParameterMap {
   ///
   template<class ParameterType>
   ParameterMap& operator()(Parameter<ParameterType> parameter);
+  /// @}
+
+  /// @name Other:
+  ///
+  /// @{
+  
+  /// @brief Returns a string describing the object's state.
+  ///
+  /// @exceptions Strong guarantee.
+  ///
+  std::string DebugString() const;
   /// @}
 
  private:

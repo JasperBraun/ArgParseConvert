@@ -310,6 +310,17 @@ class ParameterConfiguration {
             && argument_placeholder_ == other.argument_placeholder_);
   }
   /// @}
+
+  /// @name Other:
+  ///
+  /// @{
+  
+  /// @brief Returns a string describing the object's state.
+  ///
+  /// @exceptions Strong guarantee.
+  ///
+  std::string DebugString() const;
+  /// @}
  private:
   /// @brief `Parameter` class wraps around a `ParameterConfiguration` to
   ///  provide a conversion function along with the configuration.
@@ -516,6 +527,17 @@ class Parameter {
     return *this;
   }
   /// @}
+
+  /// @name Other:
+  ///
+  /// @{
+  
+  /// @brief Returns a string describing the object's state.
+  ///
+  /// @exceptions Strong guarantee.
+  ///
+  std::string DebugString() const;
+  /// @}
  private:
   // Used only in factories to ensure proper initialization.
   Parameter() = default;
@@ -558,7 +580,7 @@ Parameter<ParameterType> Parameter<ParameterType>::Create(
 // Parameter::Flag
 //
 template <>
-Parameter<bool> Parameter<bool>::Flag(std::vector<std::string> names) {
+inline Parameter<bool> Parameter<bool>::Flag(std::vector<std::string> names) {
   Parameter<bool> result;
   ParameterConfiguration configuration;
   configuration.category_ = ParameterCategory::kFlag;
@@ -599,6 +621,18 @@ Parameter<ParameterType> Parameter<ParameterType>::Positional(
       std::move(configuration), std::move(converter),
       std::vector<std::string>{std::move(name)});
   return result;
+}
+
+// Parameter::DebugString
+//
+template <class ParameterType>
+std::string Parameter<ParameterType>::DebugString() const {
+  std::stringstream ss;
+  ss << "{configuration: "
+     << configuration_.DebugString()
+     << ", has converter: " << std::boolalpha
+     << static_cast<bool>(converter_) << "}.";
+  return ss.str();
 }
 
 } // namespace arg_parse_convert

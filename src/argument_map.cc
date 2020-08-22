@@ -18,43 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef ARG_PARSE_CONVERT_ARG_PARSE_CONVERT_H_
-#define ARG_PARSE_CONVERT_ARG_PARSE_CONVERT_H_
-
 #include "argument_map.h"
-#include "conversion_functions.h"
-#include "exceptions.h"
-//#include "help_string_format.h"
-#include "parameter.h"
-#include "parameter_map.h"
-//#include "parsers.h"
 
-/// @defgroup ArgParseConvert-Reference
-///
-/// @{
+#include <sstream>
 
-/// @brief Library namespace.
-///
-/// @details All types and functions defined by the library reside inside this
-///  namespace.
-///
-namespace arg_parse_convert {}
+namespace arg_parse_convert {
 
-/// @brief Contains library-specific exceptions.
-///
-/// @details All non-STL exceptions thrown by library functions are derived
-///  from `BaseError`.
-///
-namespace arg_parse_convert::exceptions {}
+// ArgumentMap::DebugString
+//
+std::string ArgumentMap::DebugString() const {
+  std::stringstream ss;
+  ss << "{size: " << size() << ", arguments: [";
+  if (size() > 0) {
+    for (const std::vector<std::string>& arg_list : arguments_) {
+      ss << '{';
+      for (const std::string& arg : arg_list) {
+        ss << arg  << ',';
+      }
+      ss << "}";
+    }
+  }
+  ss << "]}";
+  return ss.str();
+}
 
-/// @brief Contains common conversion functions.
-///
-/// @details For compatibility,  wrappers around standard library string
-///  conversion functions contained in this namespace must be used as conversion
-///  functions instead of using the corresponding standad library functions
-///  directly.
-///
-namespace arg_parse_convert::converters {}
-/// @}
-
-#endif // ARG_PARSE_CONVERT_ARG_PARSE_CONVERT_H_
+} // namespace arg_parse_convert

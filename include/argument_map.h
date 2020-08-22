@@ -21,6 +21,14 @@
 #ifndef ARG_PARSE_CONVERT_ARGUMENT_MAP_H_
 #define ARG_PARSE_CONVERT_ARGUMENT_MAP_H_
 
+#include <any>
+#include <string>
+#include <vector>
+
+#include "exceptions.h"
+#include "parameter.h"
+#include "parameter_map.h"
+
 namespace arg_parse_convert {
 
 /// @addtogroup ArgParseConvert-Reference
@@ -30,8 +38,15 @@ namespace arg_parse_convert {
 /// @brief Stores arguments for an internal `ParameterMap` member's parameters
 ///  and allows for retrieving the parameter values.
 ///
+/// @invariant Number of stored argument lists is always the same as the size of
+///  the `ParameterMap` member.
+///
+/// @invariant Number of stored value lists is always the same as the size of
+///  the `ParameterMap` member.
+///
 class ArgumentMap {
  public:
+  using size_type = std::vector<std::vector<std::string>>::size_type;
   /// @name Constructors:
   ///
   /// @{
@@ -40,7 +55,8 @@ class ArgumentMap {
   ///
   ArgumentMap(ParameterMap&& parameters)
       : parameters_{parameters},
-        arguments_{parameters_.size(), std::vector<std::string>{}} {}
+        arguments_{parameters_.size(), std::vector<std::string>{}},
+        value_lists_{parameters_.size(), std::vector<std::any>{}} {}
 
   /// @brief Copy constructor.
   ///
@@ -78,16 +94,70 @@ class ArgumentMap {
   ///
   inline void SetDefaultArguments() {
     for (int i = 0; i < arguments_.size(); ++i) {
-      if (!parameters_.IsFlag(i) && arguments_.at(i).size() == 0) {
-        arguments_.at(i) = parameters_.GetConfiguration(i).DefaultArguments();
+      if (parameters_.GetConfiguration(i).category() != ParameterCategory::kFlag
+          && arguments_.at(i).size() == 0) {
+        arguments_.at(i) = parameters_.GetConfiguration(i).default_arguments();
       }
+    }
+  }
+
+  /// @brief Adds an argument to the list of arguments of the parameter
+  ///  identified by `name`.
+  ///
+  /// @details Does nothing if list of arguments is already full.
+  ///
+  /// @exceptions Strong guarantee. Throws `exceptions::ParameterAccessError` if
+  ///  object's `ParameterMap` member contains no parameter identified by
+  ///  `name`.
+  ///
+  inline void AddArgument(const std::string& name, std::string arg) {
+    int id{parameters_.GetId(name)},
+        max_num_args{parameters_.GetConfiguration(name).max_num_arguments()};
+    if (max_num_args == 0 || arguments_.at(id).size() < max_num_args) {
+      arguments_.at(parameters_.GetId(name)).emplace_back(std::move(arg));
     }
   }
   /// @}
 
-  /// @name Parameter value access:
+  /// @name Accessors:
   ///
   /// @{
+
+  /// @brief Returns the number of argument lists stored in the object.
+  ///
+  /// @exceptions Strong guarantee.
+  ///
+  inline size_type size() const {return arguments_.size();}
+
+  /// @brief Returns the `ParameterMap` member of the object.
+  ///
+  /// @exceptions Strong guarantee.
+  ///
+  inline const ParameterMap& Parameters() const {return parameters_;}
+
+  /// @brief Returns the lists of arguments for the parameters.
+  ///
+  /// @details The position of the argument list of a parameter in the returned
+  ///  vector is its id.
+  ///
+  /// @exceptions Strong guarantee.
+  ///
+  inline const std::vector<std::vector<std::string>>& Arguments() const {
+    return arguments_;
+  }
+
+  /// @brief Returns the lists of values for the parameters.
+  ///
+  /// @details The position of the argument list of a parameter in the returned
+  ///  vector is its id. Argument lists are only filled up to the positions for
+  ///  which `GetValue` was called, or filled all the way if `GetAllValues` was
+  ///  called for the corresponding paramters.
+  ///
+  /// @exceptions Strong guarantee.
+  ///
+  inline const std::vector<std::vector<std::any>>& Values() const {
+    return value_lists_;
+  }
 
   /// @brief Returns list of unfilled parameters.
   ///
@@ -102,7 +172,7 @@ class ArgumentMap {
     std::vector<std::string> result;
     for (int i = 0; i < parameters_.size(); ++i) {
       if (parameters_.GetConfiguration(i).min_num_arguments()
-          < arguments_.at(i).size()) {
+          > arguments_.at(i).size()) {
         result.emplace_back(parameters_.GetPrimaryName(i));
       }
     }
@@ -113,7 +183,7 @@ class ArgumentMap {
   ///  by `name`.
   ///
   /// @details Returns true if an argument was parsed for the parameter, or set
-  ///  by default during parsing.
+  ///  by default.
   ///
   /// @exceptions Strong guarantee. Throws `exceptions::ParameterAccessError` if
   ///  object's `ParameterMap` member contains no parameter identified by
@@ -121,6 +191,17 @@ class ArgumentMap {
   ///
   inline bool HasArgument(const std::string& name) const {
     return (arguments_.at(parameters_.GetId(name)).size() > 0);
+  }
+
+  /// @brief Returns the arguments assigned to parameter identified by `name`.
+  ///
+  /// @exceptions Strong guarantee. Throws `exceptions::ParameterAccessError` if
+  ///  object's `ParameterMap` member contains no parameter identified by
+  ///  `name`.
+  ///
+  inline const std::vector<std::string>&
+  ArgumentsOf(const std::string& name) const {
+    return (arguments_.at(parameters_.GetId(name)));
   }
 
   /// @brief Returns value of parameter.
@@ -145,7 +226,7 @@ class ArgumentMap {
   ///  * Conversion function may throw.
   ///
   template <class ParameterType>
-  ParameterType GetValue(const std::string& name, int pos = 0) const;
+  ParameterType GetValue(const std::string& name, int pos = 0);
 
   /// @brief Returns list of values of parameter.
   ///
@@ -166,7 +247,7 @@ class ArgumentMap {
   ///  * Conversion function may throw.
   ///
   template <class ParameterType>
-  std::vector<ParameterType> GetAllValues(const std::string& name) const;
+  std::vector<ParameterType> GetAllValues(const std::string& name);
 
   /// @brief Returns whether or not the flag is set.
   ///
@@ -192,11 +273,22 @@ class ArgumentMap {
   }
   /// @}
 
+  /// @name Other:
+  ///
+  /// @{
+  
+  /// @brief Returns a string describing the object's state.
+  ///
+  /// @exceptions Strong guarantee.
+  ///
+  std::string DebugString() const;
+  /// @}
+
  private:
   friend void ParseArgs(int argc, const char** argv, ArgumentMap& arguments);
   /// @brief `ParameterMap` object associated with the object.
   ///
-  const ParameterMap parameters_;
+  ParameterMap parameters_;
 
   /// @brief Lists of arguments of parameters stored in the object.
   ///
@@ -219,10 +311,10 @@ class ArgumentMap {
 // ArgumentMap::GetValue
 //
 template <class ParameterType>
-ParameterType ArgumentMap::GetValue(const std::string& name, int pos) const {
+ParameterType ArgumentMap::GetValue(const std::string& name, int pos) {
   int id{parameters_.GetId(name)};
   std::function<ParameterType(const std::string&)> converter{
-      parameters_.ConversionFunction(name)};
+      parameters_.ConversionFunction<ParameterType>(name)};
   std::stringstream error_message;
 
   // Test if argument at position `pos` was assigned.
@@ -251,7 +343,7 @@ ParameterType ArgumentMap::GetValue(const std::string& name, int pos) const {
   if (value_lists_.at(id).size() <= pos
       || !value_lists_.at(id).at(pos).has_value()) {
     value_lists_.at(id).reserve(pos);
-    for (int i = value_lists_.at(id).size(); i < pos - 1; ++i) {
+    for (int i = value_lists_.at(id).size(); i < pos; ++i) {
       value_lists_.at(id).emplace_back();
     }
     value_lists_.at(id).emplace_back(converter(arguments_.at(id).at(pos)));
@@ -262,13 +354,29 @@ ParameterType ArgumentMap::GetValue(const std::string& name, int pos) const {
 // ArgumentMap::GetAllValues
 //
 template <class ParameterType>
-std::vector<ParameterType> ArgumentMap::GetAllValues(
-    const std::string& name) const {
+std::vector<ParameterType> ArgumentMap::GetAllValues(const std::string& name) {
   std::vector<ParameterType> result;
-  int id{GetId(name)};
+  int id{parameters_.GetId(name)};
+  std::function<ParameterType(const std::string&)> converter{
+      parameters_.ConversionFunction<ParameterType>(name)};
+  std::stringstream error_message;
+
+  // Test if parameter has a conversion function.
+  if (converter == nullptr) {
+    error_message << "Parameter identified by '" << name << "' has no"
+                  << " conversion function associated with it.";
+    throw exceptions::ValueAccessError(error_message.str());
+  }
+  // Test if `name` is a flag.
+  if (parameters_.flags().count(id)) {
+    error_message << "Attempted to use `ArgumentMap::GetValue` to check if flag"
+                     " named: '" <<  name << "' was set. Use"
+                     " `ArgumentMap::IsSet` to test flag values.";
+    throw exceptions::ValueAccessError(error_message.str());
+  }
 
   for (int pos = 0; pos < arguments_.at(id).size(); ++pos) {
-    result.push_back(GetValue(name, pos));
+    result.push_back(GetValue<ParameterType>(name, pos));
   }
   return result;
 }

@@ -33,7 +33,8 @@
 
 // Test correctness for:
 // * GetPrimaryName
-// * GetConfiguration
+// * GetConfiguration(std::string)
+// * GetConfiguration(int)
 // * ConversionFunction
 // * operator()
 //
@@ -43,7 +44,8 @@
 // Test exceptions for:
 // * GetId
 // * GetPrimaryName
-// * GetConfiguration
+// * GetConfiguration(std::string)
+// * GetConfiguration(int)
 // * ConversionFunction
 // * operator()
 
@@ -392,8 +394,8 @@ SCENARIO("Test exceptions thrown by ParameterMap::GetPrimaryName."
   }
 }
 
-SCENARIO("Test correctness of ParameterMap::GetConfiguration."
-         "[ParameterMap][GetConfiguration][correctness]") {
+SCENARIO("Test correctness of ParameterMap::GetConfiguration(std::string)."
+         "[ParameterMap][GetConfiguration(std::string)][correctness]") {
 
   GIVEN("A `ParameterMap` object.") {
     ParameterMap parameter_map;
@@ -424,8 +426,9 @@ SCENARIO("Test correctness of ParameterMap::GetConfiguration."
   }
 }
 
-SCENARIO("Test exceptions thrown by ParameterMap::GetConfiguration.",
-         "[ParameterMap][GetConfiguration][exceptions]") {
+SCENARIO("Test exceptions thrown by"
+         " ParameterMap::GetConfiguration(std::string).",
+         "[ParameterMap][GetConfiguration(std::string)][exceptions]") {
 
   GIVEN("A `ParameterMap` object.") {
     ParameterMap parameter_map;
@@ -478,6 +481,94 @@ SCENARIO("Test exceptions thrown by ParameterMap::GetConfiguration.",
                                         "bazinga", "g"}) {
           CHECK_NOTHROW(parameter_map.GetConfiguration(name));
         }
+      }
+    }
+  }
+}
+
+SCENARIO("Test correctness of ParameterMap::GetConfiguration(int)."
+         "[ParameterMap][GetConfiguration(int)][correctness]") {
+
+  GIVEN("A `ParameterMap` object.") {
+    ParameterMap parameter_map;
+
+    WHEN("Positional, keyword and flag parameters are stored.") {
+      Parameter<std::string> foo{Parameter<std::string>::Positional(
+                                 converters::StringIdentity, "foo", 1)};
+      Parameter<int> zig{Parameter<int>::Positional(
+                         converters::stoi, "zig", 10)};
+      Parameter<std::string> bar{Parameter<std::string>::Keyword(
+                                 converters::StringIdentity,
+                                 {"b", "bar", "barometer"})};
+      Parameter<TestType> car{Parameter<TestType>::Keyword(
+                              StringToTestType, {"car", "c", "carometer"})};
+      Parameter<bool> baz{Parameter<bool>::Flag({"baz", "z", "bazinga"})};
+      Parameter<bool> g{Parameter<bool>::Flag({"g"})};
+      parameter_map(foo)(zig)(bar)(car)(baz)(g);
+
+      THEN("Parameter configurations are retrieved correctly.") {
+        CHECK(parameter_map.GetConfiguration(0) == foo.configuration());
+        CHECK(parameter_map.GetConfiguration(1) == zig.configuration());
+        CHECK(parameter_map.GetConfiguration(2) == bar.configuration());
+        CHECK(parameter_map.GetConfiguration(3) == car.configuration());
+        CHECK(parameter_map.GetConfiguration(4) == baz.configuration());
+        CHECK(parameter_map.GetConfiguration(5) == g.configuration());
+      }
+    }
+  }
+}
+
+SCENARIO("Test exceptions thrown by ParameterMap::GetConfiguration(int).",
+         "[ParameterMap][GetConfiguration(int)][exceptions]") {
+
+  GIVEN("A `ParameterMap` object.") {
+    ParameterMap parameter_map;
+
+    WHEN("No parameters are registered.") {
+
+      THEN("Any id will cause exception.") {
+        CHECK_THROWS_AS(parameter_map.GetConfiguration(0),
+                        exceptions::ParameterAccessError);
+        CHECK_THROWS_AS(parameter_map.GetConfiguration(1),
+                        exceptions::ParameterAccessError);
+        CHECK_THROWS_AS(parameter_map.GetConfiguration(100),
+                        exceptions::ParameterAccessError);
+        CHECK_THROWS_AS(parameter_map.GetConfiguration(-1),
+                        exceptions::ParameterAccessError);
+        CHECK_THROWS_AS(parameter_map.GetConfiguration(-100),
+                        exceptions::ParameterAccessError);
+      }
+    }
+
+    WHEN("Positional, keyword and flag parameters are stored.") {
+
+      parameter_map(Parameter<std::string>::Positional(
+                        converters::StringIdentity, "foo", 1))
+                   (Parameter<int>::Positional(
+                        converters::stoi, "zig", 10))
+                   (Parameter<std::string>::Keyword(
+                        converters::StringIdentity, {"b", "bar", "barometer"}))
+                   (Parameter<TestType>::Keyword(
+                        StringToTestType, {"car", "c", "carometer"}))
+                   (Parameter<bool>::Flag({"baz", "z", "bazinga"}))
+                   (Parameter<bool>::Flag({"g"}));
+
+      THEN("Id's not referring to stored parameters will cause exception.") {
+        CHECK_THROWS_AS(parameter_map.GetConfiguration(6),
+                        exceptions::ParameterAccessError);
+        CHECK_THROWS_AS(parameter_map.GetConfiguration(7),
+                        exceptions::ParameterAccessError);
+        CHECK_THROWS_AS(parameter_map.GetConfiguration(100),
+                        exceptions::ParameterAccessError);
+        CHECK_THROWS_AS(parameter_map.GetConfiguration(-1),
+                        exceptions::ParameterAccessError);
+        CHECK_THROWS_AS(parameter_map.GetConfiguration(-100),
+                        exceptions::ParameterAccessError);
+      }
+
+      THEN("Id's referring to stored parameters will not cause exception.") {
+        int id = GENERATE(range(0, 6));
+        CHECK_NOTHROW(parameter_map.GetConfiguration(id));
       }
     }
   }

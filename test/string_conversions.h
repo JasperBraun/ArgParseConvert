@@ -24,63 +24,13 @@
 #include "catch.h"
 #include "arg_parse_convert.h"
 
-namespace arg_parse_convert {
-
-namespace test {
-
-// Maps integers to string representation of `ParameterConfiguration`
-// enumerators
-//
-const char* kParameterCategory[]{
-  "kPositionalParameter",
-  "kKeywordParameter",
-  "kFlag"
-};
-
-} // namespace test
-
-} // namespace arg_parse_convert
-
 namespace Catch {
-
-template<>
-struct StringMaker<arg_parse_convert::ParameterCategory> {
-  static std::string convert(
-      const arg_parse_convert::ParameterCategory& category) {
-    return arg_parse_convert::test::kParameterCategory[static_cast<int>(
-        category)];
-  }
-};
 
 template<>
 struct StringMaker<arg_parse_convert::ParameterConfiguration> {
   static std::string convert(
       const arg_parse_convert::ParameterConfiguration& configuration) {
-    std::stringstream ss;
-    ss << "{names: [";
-    if (!configuration.names().empty()) {
-      ss << configuration.names().at(0);
-      for (const std::string& name : configuration.names()) {
-        ss << ", " << name;
-      }
-    }
-    ss << "], category: "
-       << StringMaker<arg_parse_convert::ParameterCategory>::convert(
-           configuration.category())
-       << ", default arguments: [";
-    if (!configuration.default_arguments().empty()) {
-      ss << configuration.default_arguments().at(0);
-      for (const std::string& argument : configuration.default_arguments()) {
-        ss << ", " << argument;
-      }
-    }
-    ss << "], position: " << configuration.position()
-       << ", min number of arguments: " << configuration.min_num_arguments()
-       << ", max number of arguments: " << configuration.max_num_arguments()
-       << ", description: " << configuration.description()
-       << ", argument placeholder: " << configuration.placeholder()
-       << "}.";
-    return ss.str();
+    return configuration.DebugString();
   }
 };
 
@@ -88,13 +38,7 @@ template<class ParameterType>
 struct StringMaker<arg_parse_convert::Parameter<ParameterType>> {
   static std::string convert(
       const arg_parse_convert::Parameter<ParameterType>& parameter) {
-    std::stringstream ss;
-    ss << "{configuration: "
-       << StringMaker<arg_parse_convert::ParameterConfiguration>::convert(
-           parameter.configuration())
-       << ", has converter: " << std::boolalpha
-       << static_cast<bool>(parameter.converter()) << "}.";
-    return ss.str();
+    return parameter.DebugString();
   }
 };
 
@@ -102,54 +46,15 @@ template<>
 struct StringMaker<arg_parse_convert::ParameterMap> {
   static std::string convert(
       const arg_parse_convert::ParameterMap& map) {
-    std::stringstream ss;
-    ss << "{size: " << map.size() << ", required: [";
-    if (map.required_parameters().size() > 0) {
-      for (int id : map.required_parameters()) {
-        ss << '{';
-        for (const std::string& name
-             : map.GetConfiguration(map.GetPrimaryName(id)).names()) {
-          ss << name  << ',';
-        }
-        ss << "}";
-      }
-    }
-    ss << "], positional: [";
-    if (map.positional_parameters().size() > 0) {
-      for (auto pair : map.positional_parameters()) {
-        ss << '(' << pair.first << ',';
-        ss << '{';
-        for (const std::string& name
-             : map.GetConfiguration(map.GetPrimaryName(pair.second)).names()) {
-          ss << name  << ',';
-        }
-        ss << "})";
-      }
-    }
-    ss << "], keyword: [";
-    if (map.keyword_parameters().size() > 0) {
-      for (int id : map.keyword_parameters()) {
-        ss << '{';
-        for (const std::string& name
-             : map.GetConfiguration(map.GetPrimaryName(id)).names()) {
-          ss << name  << ',';
-        }
-        ss << "}";
-      }
-    }
-    ss << "], flags: [";
-    if (map.flags().size() > 0) {
-      for (int id : map.flags()) {
-        ss << '{';
-        for (const std::string& name
-             : map.GetConfiguration(map.GetPrimaryName(id)).names()) {
-          ss << name  << ',';
-        }
-        ss << "}";
-      }
-    }
-    ss << "]}";
-    return ss.str();
+    return map.DebugString();
+  }
+};
+
+template<>
+struct StringMaker<arg_parse_convert::ArgumentMap> {
+  static std::string convert(
+      const arg_parse_convert::ArgumentMap& map) {
+    return map.DebugString();
   }
 };
 
