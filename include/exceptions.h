@@ -21,6 +21,8 @@
 #ifndef ARG_PARSE_CONVERT_EXCEPTIONS_H_
 #define ARG_PARSE_CONVERT_EXCEPTIONS_H_
 
+#include <stdexcept>
+
 namespace arg_parse_convert {
 
 namespace exceptions {
@@ -65,16 +67,12 @@ struct ArgumentParsingError final : public BaseError {
   using BaseError::BaseError;
 };
 
-/*
-
-
-
 /// @brief Exception thrown while generating help-strings.
 ///
 struct HelpStringError final : public BaseError {
   using BaseError::BaseError;
 };
-*/
+
 } // namespace exceptions
 
 } // namespace arg_parse_convert

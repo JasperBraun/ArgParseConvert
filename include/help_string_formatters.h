@@ -21,7 +21,10 @@
 #ifndef ARG_PARSE_CONVERT_HELP_STRING_FORMATTERS_H_
 #define ARG_PARSE_CONVERT_HELP_STRING_FORMATTERS_H_
 
+#include <string>
+
 #include "exceptions.h"
+#include "parameter_map.h"
 
 namespace arg_parse_convert {
 
@@ -43,7 +46,8 @@ namespace arg_parse_convert {
 ///  descriptions of parameters, `parameter_indentation` determines how far the
 ///  names and argument lists of parameters are indented, and
 ///  `description_indentation` determines how far descriptions of parameters are
-///  indented.
+///  indented. Parameters within each of the sections appear in the same order
+///  as originally inserted into the `parameter_map`.
 ///
 /// @exceptions Strong guarantee. Throws `exceptions::HelpStringError` if
 ///  * `width` is not positive.
