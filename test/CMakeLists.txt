@@ -27,3 +27,15 @@ target_include_directories(argument_map_test PUBLIC
         "${PROJECT_SOURCE_DIR}/lib/catch/include"
         "${PROJECT_SOURCE_DIR}/test")
 add_test(NAME argument_map_test COMMAND argument_map_test)
+
+add_executable(parsers_test
+        "${PROJECT_SOURCE_DIR}/test/parsers_test.cc"
+        "${PROJECT_SOURCE_DIR}/src/parsers.cc"
+        "${PROJECT_SOURCE_DIR}/src/argument_map.cc"
+        "${PROJECT_SOURCE_DIR}/src/parameter_map.cc"
+        "${PROJECT_SOURCE_DIR}/src/parameter.cc")
+target_include_directories(parsers_test PUBLIC
+        "${PROJECT_SOURCE_DIR}/include"
+        "${PROJECT_SOURCE_DIR}/lib/catch/include"
+        "${PROJECT_SOURCE_DIR}/test")
+add_test(NAME parsers_test COMMAND parsers_test)

@@ -21,6 +21,12 @@
 #ifndef ARG_PARSE_CONVERT_PARSERS_H_
 #define ARG_PARSE_CONVERT_PARSERS_H_
 
+#include <string>
+#include <vector>
+
+#include "argument_map.h"
+#include "exceptions.h"
+
 namespace arg_parse_convert {
 
 /// @addtogroup ArgParseConvert-Reference
@@ -56,7 +62,7 @@ namespace arg_parse_convert {
 ///
 /// @exceptions Basic guarantee. Throws `exceptions::ArgumentParsingError` when:
 ///  * Option list contains a character that is not the name of a flag, or the
-///    last letter and the name of a keyword parameter.
+///    the name of a keyword parameter in the case of the last letter.
 ///  * When a parameter begins with 2 hyphens, but the suffix after the 2 hypens
 ///    is not the name of a registered keyword parameter or flag.
 ///    
@@ -68,10 +74,10 @@ std::vector<std::string> ParseArgs(int argc, const char** argv,
 ///
 /// @details Empty lines and lines starting with '#' are ignored. Parameter
 ///  names and arguments must be listed in the form 'name=arg1 arg2 ... argN'.
-///  Flags must only be assigned a single argument ('TRUE', 'True', 'true', or
-///  '1' for setting the flag and 'FALSE', 'False, 'false', or '0' for
-///  unsetting the flag). Flags and keywords must be listed by name (without
-///  hyphens), or they are not recognized.
+///  Flags must only be assigned a single argument (TRUE, True, true, or 1 for
+///  setting the flag and FALSE, False, false, or 0 for explicitly unsetting the
+///  flag). Flags and keywords must be listed by name (without hyphens), or they
+///  are not recognized.
 ///
 /// If a parameter was assigned one or more arguments prior to execution of this
 ///  function, the arguments that would be assigned to it by this function are
@@ -87,8 +93,7 @@ std::vector<std::string> ParseArgs(int argc, const char** argv,
 ///  * Something other than the prescribed strings was set as the argument of a
 ///    flag.
 ///
-std::vector<std::string> ParseFile(std::istream* config_is,
-                                   ArgumentMap& arguments);
+std::vector<std::string> ParseFile(std::istream* is, ArgumentMap& arguments);
 /// @}
 
 /// @}

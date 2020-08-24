@@ -98,6 +98,31 @@ class ParameterMap {
     return parameter_configurations_.size();
   }
 
+  /// @brief Indicates whether object contains parameter identified by `name`.
+  ///
+  /// @exceptions Strong guarantee.
+  ///
+  inline bool Contains(const std::string& name) const {
+    return (name_to_id_.count(name) > 0);
+  }
+
+  /// @brief Indicates whether object contains a flag identified by `name`.
+  ///
+  /// @exceptions Strong guarantee.
+  ///
+  inline bool IsFlag(const std::string& name) const {
+    return (Contains(name) && flags_.count(GetId(name)) > 0);
+  }
+
+  /// @brief Indicates whether object contains a keyword parameter identified by
+  ///  `name`.
+  ///
+  /// @exceptions Strong guarantee.
+  ///
+  inline bool IsKeyword(const std::string& name) const {
+    return (Contains(name) && keyword_parameters_.count(GetId(name)) > 0);
+  }
+
   /// @brief Returns integer-identifier for parameter with string-identifier
   ///  `name`.
   ///

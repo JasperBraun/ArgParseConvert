@@ -42,6 +42,7 @@
 // * operator()
 //
 // Test exceptions for:
+// * IsFlag
 // * GetId
 // * GetPrimaryName
 // * GetConfiguration(std::string)

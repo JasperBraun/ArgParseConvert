@@ -285,7 +285,10 @@ class ArgumentMap {
   /// @}
 
  private:
-  friend void ParseArgs(int argc, const char** argv, ArgumentMap& arguments);
+  friend std::vector<std::string> ParseArgs(int argc, const char** argv,
+                                            ArgumentMap& arguments);
+  friend std::vector<std::string> ParseFile(std::istream* config_is,
+                                            ArgumentMap& arguments);
   /// @brief `ParameterMap` object associated with the object.
   ///
   ParameterMap parameters_;

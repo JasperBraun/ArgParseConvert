@@ -20,6 +20,9 @@
 
 #include "parsers.h"
 
+#include <algorithm>
+#include <iterator>
+
 namespace arg_parse_convert {
 
 // Parser helpers.
@@ -39,12 +42,14 @@ int NumHyphens(const std::string& arg) {
   }
 }
 
-// Indicates whether parameter identified by `id` requires any more arguments.
+// Indicates whether parameter identified by `id` requires more than
+// `num_arguments` arguments.
 //
 bool IsFull(int id, int num_arguments, const ParameterMap& parameters) {
-  assert(0 <= id && id < parameter.argument_list().size());
-  assert(id < arguments.argument_lists().size());
-  return (num_arguments >= parameters.GetConfiguration(id).max_num_arguments());
+  assert(0 <= id && id < parameters.size());
+  return (parameters.GetConfiguration(id).max_num_arguments() > 0
+          && num_arguments >= parameters.GetConfiguration(id)
+                                        .max_num_arguments());
 }
 
 // Closes a keyword parameter's argument list by setting `it` to `cend`.
@@ -77,11 +82,12 @@ void ClosePositional(std::map<int, int>::const_iterator& it,
 //
 void AddPositionalArgument(std::map<int, int>::const_iterator& it,
     std::string&& argument, const ParameterMap& parameters,
-    bool& positional_open, std::map<int, std::vector<std::string>>& arg_lists) {
+    bool& positional_open,
+    std::unordered_map<int, std::vector<std::string>>& arg_lists) {
   assert(it != parameters.positional_parameters().cend());
   arg_lists[it->second].emplace_back(argument);
-  if (IsFull(it->second, argument_list.size(), parameters)) {
-    ClosePositional(it);
+  if (IsFull(it->second, arg_lists.at(it->second).size(), parameters)) {
+    ClosePositional(it, parameters, positional_open);
   } else {
     positional_open = true;
   }
@@ -92,18 +98,19 @@ void AddPositionalArgument(std::map<int, int>::const_iterator& it,
 //
 void AddKeywordArgument(std::unordered_set<int>::const_iterator& it,
     std::string&& argument, const ParameterMap& parameters,
-    std::map<int, std::vector<std::string>>& arg_lists) {
+    std::unordered_map<int, std::vector<std::string>>& arg_lists) {
   assert(it != parameters.keyword_parameters().cend());
   arg_lists[*it].emplace_back(argument);
-  if (IsFull(*it, argument_list.size(), parameters)) {
+  if (IsFull(*it, arg_lists.at(*it).size(), parameters)) {
     CloseKeyword(it, parameters);
   }
 }
 
 // Sets the flag. A flag is considered set if it has at least one argument.
 //
-void SetFlag(std::vector<std::string>& flag_argument_list) {
-  flag_argument_list.emplace_back("true");
+void SetFlag(std::vector<std::string>& flag_argument_list,
+             const std::string& name) {
+  flag_argument_list.emplace_back(name);
 }
 
 // Assigns list of arguments of each entry in `tmp_args` to the parameter
@@ -114,53 +121,59 @@ void SetFlag(std::vector<std::string>& flag_argument_list) {
 // more arguments are listed in `tmp_args`, they are also added to
 // `additional_args`.
 //
-void AssignArguments(std::unordered_map<int, std::vector<string>>& tmp_args,
-                     const ParameterMap& parameters,
-                     std::vector<std::vector<std::string>>& map_args,
-                     std::vector<std::string>& additional_args) {
+void AssignArguments(
+    std::unordered_map<int, std::vector<std::string>>& tmp_args,
+    const ParameterMap& parameters,
+    std::vector<std::vector<std::string>>& map_args,
+    std::vector<std::string>& additional_args) {
   assert(parameters.size() == map_args.size());
   int num_args, max_num_args;
-  for (id_args_pair : tmp_args) {
-    max_num_args = parameters.GetConfiguration(id_args_pair->first)
+  for (auto& id_args_pair : tmp_args) {
+    max_num_args = parameters.GetConfiguration(id_args_pair.first)
                              .max_num_arguments();
-    num_args = id_args_pair->second.size();
-    if (map_args.at(id_args_pair->first).size()) {
+    num_args = id_args_pair.second.size();
+    if (map_args.at(id_args_pair.first).size()) {
       additional_args.reserve(additional_args.size() + num_args);
-      std::move(std::begin(id_args_pair->second),
-                std::end(id_args_pair->second),
-                std::end(additional_args));
-    } else if (max_num_args < num_args) {
+      std::move(std::begin(id_args_pair.second),
+                std::end(id_args_pair.second),
+                std::back_inserter(additional_args));
+    } else if (max_num_args != 0 && max_num_args < num_args) {
       additional_args.reserve(additional_args.size() + num_args - max_num_args);
-      map_args.at(id_args_pair->first).reserve(max_num_args);
-      std::move(std::begin(id_args_pair->second) + max_num_args,
-                std::end(id_args_pair->second)),
-                std::end(additional_args));
-      std::move(std::begin(id_args_pair->second),
-                std::begin(id_args_pair->second) + max_num_args,
-                std::end(map_args.at(id_args_pair->first)));
+      map_args.at(id_args_pair.first).reserve(max_num_args);
+      std::move(std::begin(id_args_pair.second),
+                std::begin(id_args_pair.second) + max_num_args,
+                std::back_inserter(map_args.at(id_args_pair.first)));
+      std::move(std::begin(id_args_pair.second) + max_num_args,
+                std::end(id_args_pair.second),
+                std::back_inserter(additional_args));
     } else {
-      map_args.at(id_args_pair->first).reserve(id_args_pair->second.size());
-      std::move(std::begin(id_args_pair->second),
-                std::end(id_args_pair->second),
-                std::end(map_args.at(id_args_pair->first)));
+      map_args.at(id_args_pair.first).reserve(id_args_pair.second.size());
+      std::move(std::begin(id_args_pair.second),
+                std::end(id_args_pair.second),
+                std::back_inserter(map_args.at(id_args_pair.first)));
     }
   }
 }
 
-// Adds arguments in space separated `argument_list` to argument list of
+// Adds arguments in space-separated `argument_list` to argument list of
 // parameter identified by `id`. Arguments in excess of the parameter's maximum
-// expected number of arguments are added to `additional_args`.
+// argument number are added to `additional_args`.
 //
-void AddArgumentList(int id, const std::string_view& argument_list,
-                     std::map<int, std::vector<std::string>>& tmp_args,
-                     std::vector<std::string>& additional_args) {
+void AddArgumentList(
+    int id, const std::string_view& argument_list,
+    std::unordered_map<int, std::vector<std::string>>& tmp_args,
+    std::vector<std::string>& additional_args) {
   assert(argument_list.length() > 0);
   int start, end{-1};
   do {
     start = end + 1;
     end = argument_list.find(' ', start);
-    if (start < end) {
-      tmp_args[id].emplace_back(argument_list.substr(start, end - start));
+    if (start != end) {
+      if (end == std::string_view::npos) {
+        tmp_args[id].emplace_back(argument_list.substr(start));
+      } else {
+        tmp_args[id].emplace_back(argument_list.substr(start, end - start));
+      }
     }
   } while (end != std::string_view::npos && end < argument_list.length() - 1);
 }
@@ -171,26 +184,31 @@ void AddArgumentList(int id, const std::string_view& argument_list,
 //
 std::vector<std::string> ParseArgs(int argc, const char** argv,
                                    ArgumentMap& arguments) {
-  std::unordered_map<int, std::vector<string>> tmp_args;
+  std::unordered_map<int, std::vector<std::string>> tmp_args;
   std::vector<std::string> additional_args;
+  std::string argument;
+  std::string short_name, long_name;
+  int num_hyphens;
+  std::stringstream error_message;
 
-  auto positional_it = parameters.positional_parameters().cbegin();
-  auto positional_end = parameters.positional_parameters().cend();
-  auto keyword_it = parameters.keyword_parameters().cend();
-  auto keyword_end = parameters.keyword_parameters().cend();
+  auto positional_it = arguments.Parameters().positional_parameters().cbegin();
+  auto positional_end = arguments.Parameters().positional_parameters().cend();
+  auto keyword_it = arguments.Parameters().keyword_parameters().cend();
+  auto keyword_end = arguments.Parameters().keyword_parameters().cend();
   bool positional_only = false;
   bool positional_open = false;
+
   // Scan arguments from left-to-right.
   for (int i = 1; i < argc; ++i) {
     argument = argv[i];
     if (argument == "--") {
       // No more flags and keyword parameters from this point on.
-      current_keyword_it = keyword_end;
+      keyword_it = keyword_end;
       positional_only = true;
     } else if (positional_only) {
       if (positional_it != positional_end) {
-        AddPositionalArgument(current_positional_it, std::move(argument),
-            parameters, positional_open, tmp_args);
+        AddPositionalArgument(positional_it, std::move(argument),
+            arguments.Parameters(), positional_open, tmp_args);
       } else {
         additional_args.emplace_back(std::move(argument));
       }
@@ -202,14 +220,14 @@ std::vector<std::string> ParseArgs(int argc, const char** argv,
           // positional parameter argument lists. When keyword parameter's
           // argument list opens, any argument list of positional parameter is
           // closed.
-          if (current_keyword_it != keyword_end) {
-            AddKeywordArgument(current_keyword_it, std::move(argument),
-                parameters, tmp_args);
+          if (keyword_it != keyword_end) {
+            AddKeywordArgument(keyword_it, std::move(argument),
+                arguments.Parameters(), tmp_args);
           // Positional parameter argument list is open once an argument was
           // added and it expects more.
           } else if (positional_it != positional_end) {
-            AddPositionalArgument(current_positional_it, std::move(argument),
-                parameters, positional_open, tmp_args);
+            AddPositionalArgument(positional_it, std::move(argument),
+                arguments.Parameters(), positional_open, tmp_args);
           } else {
             additional_args.emplace_back(std::move(argument));
           }
@@ -217,25 +235,26 @@ std::vector<std::string> ParseArgs(int argc, const char** argv,
         }
         case 1: {
           // Close current open parameter argument lists.
-          CloseKeyword(current_keyword_it, parameters);
+          CloseKeyword(keyword_it, arguments.Parameters());
           if (positional_open) {
-            ClosePositional(current_positional_it, parameters, positional_open);
+            ClosePositional(positional_it, arguments.Parameters(),
+                            positional_open);
           }
           // Set each flag character, or open keyword parameter argument list
           // for the last character.
           for (int j = 1; j < argument.length(); ++j) {
-            if (parameters.Contains(argument.at(j))
-                && parameters.IsFlag(argument.at(j))) {
-              SetFlag(tmp_args[arguments.GetId(argument.at(j))]);
-            } else if (parameters.Contains(argument.at(j))
+            short_name = std::string(1, argument.at(j));
+            if (arguments.Parameters().Contains(short_name)
+                && arguments.Parameters().IsFlag(short_name)) {
+              SetFlag(tmp_args[arguments.Parameters().GetId(short_name)],
+                      short_name);
+            } else if (arguments.Parameters().Contains(short_name)
                        && j == argument.length() - 1
-                       && parameters.IsKeyword(argument.at(j))
-                       && !assigned.count(arguments.name_to_id_
-                                          .at(argument.at(j)))) {
-              OpenKeyword(current_keyword_it, parameters,
-                  arguments.GetId(argument.at(j)));
+                       && arguments.Parameters().IsKeyword(short_name)) {
+              OpenKeyword(keyword_it, arguments.Parameters(),
+                  arguments.Parameters().GetId(short_name));
             } else {
-              error_message << "Invalid option: '" << argument.at(i) << "' in"
+              error_message << "Invalid option: '" << argument.at(j) << "' in"
                             << " option list: '" << argument << "'. Option must"
                             << " identify a flag, or the keyword of a keyword"
                             << " parameter if last option in list.";
@@ -246,23 +265,26 @@ std::vector<std::string> ParseArgs(int argc, const char** argv,
         }
         case 2: {
           // Close current open parameter argument lists.
-          CloseKeyword(current_keyword_it, parameters);
+          CloseKeyword(keyword_it, arguments.Parameters());
           if (positional_open) {
-            ClosePositional(current_positional_it, parameters, positional_open);
+            ClosePositional(positional_it, arguments.Parameters(),
+                            positional_open);
           }
           // Remove hyphens prefix and test whether flag or keyword.
-          parameter_name = argument.substr(2);
-          if (parameters.HasParameter(parameter_name)
-              && parameters.IsFlag(parameter_name)) {
-            SetFlag(tmp_args[arguments.GetId(parameter_name)]);
-          } else if (parameters.HasParameter(parameter_name)
-                     && paramters.IsKeyword(parameter_name)) {
-            OpenKeyword(current_keyword_it, parameters,
-                        arguments.GetId(parameter_name));
+          long_name = argument.substr(2);
+          if (arguments.Parameters().Contains(long_name)
+              && arguments.Parameters().IsFlag(long_name)) {
+            SetFlag(tmp_args[arguments.Parameters().GetId(long_name)],
+                    long_name);
+          } else if (arguments.Parameters().Contains(long_name)
+                     && arguments.Parameters().IsKeyword(long_name)) {
+            OpenKeyword(keyword_it, arguments.Parameters(),
+                        arguments.Parameters().GetId(long_name));
           } else {
             error_message << "Invalid argument: '" << argv[i] << "'.";
             throw exceptions::ArgumentParsingError(error_message.str());
           }
+          break;
         }
         default: {
           assert(false);
@@ -271,7 +293,8 @@ std::vector<std::string> ParseArgs(int argc, const char** argv,
       }
     }
   }
-  AssignArguments(tmp_args, arguments.arguments_, additional_args);
+  AssignArguments(tmp_args, arguments.Parameters(), arguments.arguments_,
+                  additional_args);
   return additional_args;
 }
 
@@ -279,7 +302,7 @@ std::vector<std::string> ParseArgs(int argc, const char** argv,
 //
 std::vector<std::string> ParseFile(std::istream* config_is,
                                    ArgumentMap& arguments) {
-  std::unordered_map<int, std::vector<string>> tmp_args;
+  std::unordered_map<int, std::vector<std::string>> tmp_args;
   std::vector<std::string> additional_args;
 
   std::string line, parameter_name;
@@ -289,7 +312,7 @@ std::vector<std::string> ParseFile(std::istream* config_is,
 
   std::stringstream error_message;
 
-  while (std::getline(*config_ifs, line)) {
+  while (std::getline(*config_is, line)) {
     row_num += 1;
     line_view = std::string_view{line};
     // Only care about non-empty, non-comment lines.
@@ -301,32 +324,32 @@ std::vector<std::string> ParseFile(std::istream* config_is,
         error_message << "Invalid configuration file formatting. Non-empty"
                          " lines which don't begin with '#' must contain '='."
                          " Row: '" << row_num << "', line: '" << line << "'.";
-        throw ArgumentParsingError(error_message.str());
-      } else if (!arguments.paramters_.HasParameter(parameter_name)) {
+        throw exceptions::ArgumentParsingError(error_message.str());
+      } else if (!arguments.Parameters().Contains(parameter_name)) {
         error_message << "Unknown parameter name in configuration file. Row: '"
                       << row_num << "', name: '" << parameter_name << "'.";
-        throw ArgumentParsingError(error_message.str());
+        throw exceptions::ArgumentParsingError(error_message.str());
       } else if (end + 1 == line_view.length()) {
         error_message << "Empty argument list in configuration file. Row: '"
                       << row_num << "', line: '" << line << "'.";
-        throw ArgumentParsingError(error_message.str());
+        throw exceptions::ArgumentParsingError(error_message.str());
       } else {
-        id = GetId(parameter_name);
+        id = arguments.Parameters().GetId(parameter_name);
         begin = end + 1;
         // Flags take only one argument: true or false.
-        if (arguments.parameters_.IsFlag(id)) {
+        if (arguments.Parameters().IsFlag(parameter_name)) {
           if (line_view.substr(begin) == "TRUE"
               || line_view.substr(begin) == "true"
               || line_view.substr(begin) == "True"
               || line_view.substr(begin) == "1") {
-            tmp_args[id].emplace_back("true");
+            tmp_args[id].emplace_back(parameter_name);
           } else if (line_view.substr(begin) != "FALSE"
                      && line_view.substr(begin) != "false"
                      && line_view.substr(begin) != "False"
                      && line_view.substr(begin) != "0") {
             error_message << "Invalid argument '" << line_view.substr(begin)
                           << "' for flag: '" << parameter_name << "'.";
-            throw ArgumentParsingError(error_message.str());
+            throw exceptions::ArgumentParsingError(error_message.str());
           }
         // Keyword and positional parameters may take multiple arguments.
         } else {
@@ -336,7 +359,8 @@ std::vector<std::string> ParseFile(std::istream* config_is,
       }
     }
   }
-  AssignArguments(tmp_args, arguments.arguments_, additional_args);
+  AssignArguments(tmp_args, arguments.Parameters(), arguments.arguments_,
+                  additional_args);
   return additional_args;
 }
 
