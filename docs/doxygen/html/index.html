@@ -81,7 +81,7 @@ $(function() {
 Installation</h1>
 <p><em><b>Prerequisites:</b></em></p><ul>
 <li>C++17</li>
-<li>cmake version 3.15 or higher</li>
+<li>cmake version 3.0 or higher</li>
 <li>git (optional)</li>
 </ul>
 <p><em><b>To build binary:</b></em></p><ol type="1">
@@ -95,6 +95,7 @@ Installation</h1>
 <li>In the Parent directory's <code>CMakeList.txt</code> file, add the cloned directory as subdirectory (using <code>add_subdirectory</code>).</li>
 <li>Link the library target <code><a class="el" href="namespacearg__parse__convert.html" title="Library namespace.">arg_parse_convert</a></code> to all targets which use it, in the source code include <code><a class="el" href="arg__parse__convert_8h_source.html">arg_parse_convert.h</a></code>, and add the <code>ArgParseConvert/include</code> directory to the target's include directories (using <code>target_include_directories</code>).</li>
 </ol>
+<p><em><b>Unit tests:</b></em> Unit tests are included and compiled when in debug mode. After building, they can be run using <code>ctest</code>. To change when unit tests are built, the top-level CMakeList.txt must be changed appropriately.</p>
 <h1><a class="anchor" id="autotoc_md2"></a>
 Overview</h1>
 <p>For installation instructions, see <a href="#installation">Installation</a>. For a usage example to copy-paste and modify as needed, see <a href="#quick-example">Quick example</a>.</p>

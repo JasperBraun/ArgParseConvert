@@ -163,9 +163,9 @@ Friends</h2></td></tr>
 <tr class="memitem:aaf0b770d7f7a18cb3a4a923caacfaf13"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classarg__parse__convert_1_1_argument_map.html#aaf0b770d7f7a18cb3a4a923caacfaf13">ParseArgs</a> (int argc, const char **argv, <a class="el" href="classarg__parse__convert_1_1_argument_map.html">ArgumentMap</a> &amp;arguments)</td></tr>
 <tr class="memdesc:aaf0b770d7f7a18cb3a4a923caacfaf13"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns members of <code>argv</code> to parameters registered with the <code><a class="el" href="classarg__parse__convert_1_1_parameter_map.html" title="A ParameterMap stores the configurations of parameters.">ParameterMap</a></code> member of <code>arguments</code>.  <a href="classarg__parse__convert_1_1_argument_map.html#aaf0b770d7f7a18cb3a4a923caacfaf13">More...</a><br /></td></tr>
 <tr class="separator:aaf0b770d7f7a18cb3a4a923caacfaf13"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acff3f685602acf919e9852820fb37883"><td class="memItemLeft" align="right" valign="top"><a id="acff3f685602acf919e9852820fb37883"></a>
-std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>ParseFile</b> (std::istream *config_is, <a class="el" href="classarg__parse__convert_1_1_argument_map.html">ArgumentMap</a> &amp;arguments)</td></tr>
-<tr class="separator:acff3f685602acf919e9852820fb37883"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f108eb37db24e024aac9ee9d0b414af"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classarg__parse__convert_1_1_argument_map.html#a5f108eb37db24e024aac9ee9d0b414af">ParseFile</a> (std::istream &amp;config_is, <a class="el" href="classarg__parse__convert_1_1_argument_map.html">ArgumentMap</a> &amp;arguments)</td></tr>
+<tr class="memdesc:a5f108eb37db24e024aac9ee9d0b414af"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns arguments listed in <code>is</code> to parameters registered with the <code><a class="el" href="classarg__parse__convert_1_1_parameter_map.html" title="A ParameterMap stores the configurations of parameters.">ParameterMap</a></code> member of <code>arguments</code>.  <a href="classarg__parse__convert_1_1_argument_map.html#a5f108eb37db24e024aac9ee9d0b414af">More...</a><br /></td></tr>
+<tr class="separator:a5f108eb37db24e024aac9ee9d0b414af"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
 <a id="ae70eccb52f5c1905175e282a30a41e87"></a>
@@ -622,6 +622,53 @@ std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bott
 <dl class="section user"><dt>Exceptions</dt><dd>Basic guarantee. Throws <code><a class="el" href="structarg__parse__convert_1_1exceptions_1_1_argument_parsing_error.html" title="Exception thrown while parsing arguments.">exceptions::ArgumentParsingError</a></code> when:<ul>
 <li>Option list contains a character that is not the name of a flag, or the the name of a keyword parameter in the case of the last letter.</li>
 <li>When a parameter begins with 2 hyphens, but the suffix after the 2 hypens is not the name of a registered keyword parameter or flag. </li>
+</ul>
+</dd></dl>
+
+</div>
+</div>
+<a id="a5f108eb37db24e024aac9ee9d0b414af"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5f108eb37db24e024aac9ee9d0b414af">&#9670;&nbsp;</a></span>ParseFile</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;std::string&gt; ParseFile </td>
+          <td>(</td>
+          <td class="paramtype">std::istream &amp;&#160;</td>
+          <td class="paramname"><em>config_is</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classarg__parse__convert_1_1_argument_map.html">ArgumentMap</a> &amp;&#160;</td>
+          <td class="paramname"><em>arguments</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Assigns arguments listed in <code>is</code> to parameters registered with the <code><a class="el" href="classarg__parse__convert_1_1_parameter_map.html" title="A ParameterMap stores the configurations of parameters.">ParameterMap</a></code> member of <code>arguments</code>. </p>
+<p>Empty lines and lines starting with '#' are ignored. <a class="el" href="classarg__parse__convert_1_1_parameter.html" title="Bundles ParameterConfiguration object with conversion function and provides factories.">Parameter</a> names and arguments must be listed in the form 'name=arg1 arg2 ... argN'. Flags must only be assigned a single argument (TRUE, True, true, or 1 for setting the flag and FALSE, False, false, or 0 for explicitly unsetting the flag). Flags and keywords must be listed by name (without hyphens), or they are not recognized.</p>
+<p>If a parameter was assigned one or more arguments prior to execution of this function, the arguments that would be assigned to it by this function are added to the return value instead. Arguments in the list of arguments assigned to a parameter in excess of the parameter's maximum number of arguments are also added to the return value.</p>
+<dl class="section user"><dt>Exceptions</dt><dd>Basic guarantee. Throws <code><a class="el" href="structarg__parse__convert_1_1exceptions_1_1_argument_parsing_error.html" title="Exception thrown while parsing arguments.">exceptions::ArgumentParsingError</a></code> when:<ul>
+<li>Non-empty line not beginning with '#', does not contain '='.</li>
+<li>Name of parameter is not registered with the <code><a class="el" href="classarg__parse__convert_1_1_parameter_map.html" title="A ParameterMap stores the configurations of parameters.">ParameterMap</a></code> member of <code>arguments</code>.</li>
+<li>A parameter name is listed without arguments.</li>
+<li>Something other than the prescribed strings was set as the argument of a flag. </li>
 </ul>
 </dd></dl>
 
