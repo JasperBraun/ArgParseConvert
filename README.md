@@ -18,7 +18,7 @@ formatted help-string for viewing in a shell window.
 
 ***Prerequisites:***
 * C++17
-* cmake version 3.15 or higher
+* cmake version 3.0 or higher
 * git (optional)
 
 ***To build binary:***
@@ -36,6 +36,11 @@ formatted help-string for viewing in a shell window.
    the source code include `arg_parse_convert.h`, and add the
    `ArgParseConvert/include` directory to the target's include directories
    (using `target_include_directories`).
+
+***Unit tests:***
+Unit tests are included and compiled when in debug mode. After building, they
+can be run using `ctest`. To change when unit tests are built, the top-level
+CMakeList.txt must be changed appropriately.
 
 ## Overview
 

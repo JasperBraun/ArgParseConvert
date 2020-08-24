@@ -1252,7 +1252,7 @@ SCENARIO("Test correctness of ParseFile.", "[ParseFile][correctness]") {
 
     WHEN("Parsing empty stream.") {
       std::istringstream iss{};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
 
@@ -1274,7 +1274,7 @@ SCENARIO("Test correctness of ParseFile.", "[ParseFile][correctness]") {
                              "b=True\n"
                              "long_flag_c=true\n"
                              "e=1"};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
 
@@ -1301,7 +1301,7 @@ SCENARIO("Test correctness of ParseFile.", "[ParseFile][correctness]") {
                              "b=False\n"
                              "flag=false\n"
                              "f=0"};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
 
@@ -1329,7 +1329,7 @@ SCENARIO("Test correctness of ParseFile.", "[ParseFile][correctness]") {
                              "flag_a=FALSE\n"
                              "f=0\n"
                              "flag_c=TRUE"};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
 
@@ -1362,7 +1362,7 @@ SCENARIO("Test correctness of ParseFile.", "[ParseFile][correctness]") {
                              "a=TRUE\n"
                              "long_flag_c=0\n"
                              "flag_c=false"};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
 
@@ -1408,7 +1408,7 @@ SCENARIO("Test correctness of ParseFile.", "[ParseFile][correctness]") {
 
     WHEN("Parsing empty stream.") {
       std::istringstream iss{};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
 
@@ -1431,7 +1431,7 @@ SCENARIO("Test correctness of ParseFile.", "[ParseFile][correctness]") {
     WHEN("Parsing some keywords with arguments.") {
       std::istringstream iss{"kwarg_v=arg1 arg2\n"
                              "z=arg3 arg4"};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
 
@@ -1457,7 +1457,7 @@ SCENARIO("Test correctness of ParseFile.", "[ParseFile][correctness]") {
                              "kwarg=arg3\n"
                              "long_kwarg_v=arg4\n"
                              "v=arg5"};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
 
@@ -1504,7 +1504,7 @@ SCENARIO("Test correctness of ParseFile.", "[ParseFile][correctness]") {
       std::istringstream iss{"two_max=arg1\n"
                              "three_max=arg2 arg3\n"
                              "no_max=arg4"};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
 
@@ -1529,7 +1529,7 @@ SCENARIO("Test correctness of ParseFile.", "[ParseFile][correctness]") {
       std::istringstream iss{"two_max=arg1 arg2 arg3 arg4\n"
                              "three_max=arg5 arg6 arg7 arg8\n"
                              "no_max=arg9 arg10 arg11 arg12 arg13 arg14"};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
 
@@ -1571,7 +1571,7 @@ SCENARIO("Test correctness of ParseFile.", "[ParseFile][correctness]") {
 
     WHEN("Parsing empty stream.") {
       std::istringstream iss{};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
 
@@ -1591,7 +1591,7 @@ SCENARIO("Test correctness of ParseFile.", "[ParseFile][correctness]") {
     WHEN("Parsing some positional parameter names with arguments.") {
       std::istringstream iss{"pos4=arg1 arg2\n"
                              "pos2=arg3 arg4"};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
 
@@ -1615,7 +1615,7 @@ SCENARIO("Test correctness of ParseFile.", "[ParseFile][correctness]") {
                              "pos4=arg3\n"
                              "pos2=arg4\n"
                              "pos2=arg5"};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
 
@@ -1655,7 +1655,7 @@ SCENARIO("Test correctness of ParseFile.", "[ParseFile][correctness]") {
       std::istringstream iss{"two_max=arg1\n"
                              "three_max=arg2 arg3\n"
                              "no_max=arg4"};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
 
@@ -1681,7 +1681,7 @@ SCENARIO("Test correctness of ParseFile.", "[ParseFile][correctness]") {
       std::istringstream iss{"two_max=arg1 arg2 arg3 arg4\n"
                              "three_max=arg5 arg6 arg7 arg8\n"
                              "no_max=arg9 arg10 arg11 arg12 arg13 arg14"};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
 
@@ -1737,7 +1737,7 @@ SCENARIO("Test correctness of ParseFile.", "[ParseFile][correctness]") {
                              "flag_a=TRUE\n"
                              "long_flag_b=TRUE\n"
                              "pos_no_max=arg7 arg8"};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
 
@@ -1777,7 +1777,7 @@ SCENARIO("Test correctness of ParseFile.", "[ParseFile][correctness]") {
                              "flag_a=TRUE\n"
                              "#long_flag_b=TRUE\n"
                              "pos_no_max=arg7 arg8\n"};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
 
@@ -1843,7 +1843,7 @@ SCENARIO("Test invariant preservation by ParseFile.",
                              "flag_a=TRUE\n"
                              "#long_flag_b=TRUE\n"
                              "pos_no_max=arg7 arg8\n"};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
       REQUIRE(additional_arguments.empty());
@@ -1877,7 +1877,7 @@ SCENARIO("Test invariant preservation by ParseFile.",
                              "flag_a=TRUE\n"
                              "#long_flag_b=TRUE\n"
                              "pos_no_max=arg12\n"};
-      return_value = ParseFile(&iss, argument_map);
+      return_value = ParseFile(iss, argument_map);
       additional_arguments = std::unordered_set<std::string>{
           return_value.cbegin(), return_value.cend()};
       REQUIRE_FALSE(additional_arguments.empty());
@@ -1925,11 +1925,11 @@ SCENARIO("Test exceptions thrown by ParseFile.", "[ParseFile][exceptions]") {
       std::istringstream iss1{"pos_no_max:arg1 arg2"};
       std::istringstream iss2{" "};
       std::istringstream iss3{"kwarg_two_max arg"};
-      CHECK_THROWS_AS(ParseFile(&iss1, argument_map),
+      CHECK_THROWS_AS(ParseFile(iss1, argument_map),
                       exceptions::ArgumentParsingError);
-      CHECK_THROWS_AS(ParseFile(&iss2, argument_map),
+      CHECK_THROWS_AS(ParseFile(iss2, argument_map),
                       exceptions::ArgumentParsingError);
-      CHECK_THROWS_AS(ParseFile(&iss3, argument_map),
+      CHECK_THROWS_AS(ParseFile(iss3, argument_map),
                       exceptions::ArgumentParsingError);
     }
 
@@ -1938,11 +1938,11 @@ SCENARIO("Test exceptions thrown by ParseFile.", "[ParseFile][exceptions]") {
       std::istringstream iss2{"unknown_name=arg"};
       std::istringstream iss3{"flag_a=TRUE\n"
                               "-b=FALSE"};
-      CHECK_THROWS_AS(ParseFile(&iss1, argument_map),
+      CHECK_THROWS_AS(ParseFile(iss1, argument_map),
                       exceptions::ArgumentParsingError);
-      CHECK_THROWS_AS(ParseFile(&iss2, argument_map),
+      CHECK_THROWS_AS(ParseFile(iss2, argument_map),
                       exceptions::ArgumentParsingError);
-      CHECK_THROWS_AS(ParseFile(&iss3, argument_map),
+      CHECK_THROWS_AS(ParseFile(iss3, argument_map),
                       exceptions::ArgumentParsingError);
     }
 
@@ -1951,11 +1951,11 @@ SCENARIO("Test exceptions thrown by ParseFile.", "[ParseFile][exceptions]") {
       std::istringstream iss2{"pos_no_max="};
       std::istringstream iss3{"flag_a=TRUE\n"
                               "flag_b="};
-      CHECK_THROWS_AS(ParseFile(&iss1, argument_map),
+      CHECK_THROWS_AS(ParseFile(iss1, argument_map),
                       exceptions::ArgumentParsingError);
-      CHECK_THROWS_AS(ParseFile(&iss2, argument_map),
+      CHECK_THROWS_AS(ParseFile(iss2, argument_map),
                       exceptions::ArgumentParsingError);
-      CHECK_THROWS_AS(ParseFile(&iss3, argument_map),
+      CHECK_THROWS_AS(ParseFile(iss3, argument_map),
                       exceptions::ArgumentParsingError);
     }
 
@@ -1964,11 +1964,11 @@ SCENARIO("Test exceptions thrown by ParseFile.", "[ParseFile][exceptions]") {
       std::istringstream iss2{"flag_b=true true"};
       std::istringstream iss3{"a=TRUE\n"
                               "long_flag_b=YES"};
-      CHECK_THROWS_AS(ParseFile(&iss1, argument_map),
+      CHECK_THROWS_AS(ParseFile(iss1, argument_map),
                       exceptions::ArgumentParsingError);
-      CHECK_THROWS_AS(ParseFile(&iss2, argument_map),
+      CHECK_THROWS_AS(ParseFile(iss2, argument_map),
                       exceptions::ArgumentParsingError);
-      CHECK_THROWS_AS(ParseFile(&iss3, argument_map),
+      CHECK_THROWS_AS(ParseFile(iss3, argument_map),
                       exceptions::ArgumentParsingError);
     }
   }
