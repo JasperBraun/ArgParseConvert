@@ -1,3 +1,0 @@
-# ArgParseConvert-About
-
-Information.
