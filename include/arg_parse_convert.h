@@ -24,10 +24,10 @@
 #include "argument_map.h"
 #include "conversion_functions.h"
 #include "exceptions.h"
-//#include "help_string_format.h"
+#include "help_string_formatters.h"
 #include "parameter.h"
 #include "parameter_map.h"
-//#include "parsers.h"
+#include "parsers.h"
 
 /// @defgroup ArgParseConvert-Reference
 ///

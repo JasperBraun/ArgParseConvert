@@ -96,7 +96,7 @@ class ParameterConfiguration {
   ///
   /// @{
 
-  /// @brief Returns all string-identifiers.
+  /// @brief Returns parameter's names.
   ///
   /// @exceptions Strong guarantee.
   ///

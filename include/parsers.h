@@ -93,7 +93,7 @@ std::vector<std::string> ParseArgs(int argc, const char** argv,
 ///  * Something other than the prescribed strings was set as the argument of a
 ///    flag.
 ///
-std::vector<std::string> ParseFile(std::istream* is, ArgumentMap& arguments);
+std::vector<std::string> ParseFile(std::istream& is, ArgumentMap& arguments);
 /// @}
 
 /// @}

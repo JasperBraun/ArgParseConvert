@@ -300,7 +300,7 @@ std::vector<std::string> ParseArgs(int argc, const char** argv,
 
 // ParseFile
 //
-std::vector<std::string> ParseFile(std::istream* config_is,
+std::vector<std::string> ParseFile(std::istream& config_is,
                                    ArgumentMap& arguments) {
   std::unordered_map<int, std::vector<std::string>> tmp_args;
   std::vector<std::string> additional_args;
@@ -312,7 +312,7 @@ std::vector<std::string> ParseFile(std::istream* config_is,
 
   std::stringstream error_message;
 
-  while (std::getline(*config_is, line)) {
+  while (std::getline(config_is, line)) {
     row_num += 1;
     line_view = std::string_view{line};
     // Only care about non-empty, non-comment lines.
