@@ -21,10 +21,40 @@
 #ifndef ARG_PARSE_CONVERT_ARG_PARSE_CONVERT_H_
 #define ARG_PARSE_CONVERT_ARG_PARSE_CONVERT_H_
 
-#include "parameter.h"
-#include "parameter_map.h"
+#include "argument_map.h"
 #include "conversion_functions.h"
 #include "exceptions.h"
-#include "help_string_format.h"
+#include "help_string_formatters.h"
+#include "parameter.h"
+#include "parameter_map.h"
+#include "parsers.h"
+
+/// @defgroup ArgParseConvert-Reference
+///
+/// @{
+
+/// @brief Library namespace.
+///
+/// @details All types and functions defined by the library reside inside this
+///  namespace.
+///
+namespace arg_parse_convert {}
+
+/// @brief Contains library-specific exceptions.
+///
+/// @details All non-STL exceptions thrown by library functions are derived
+///  from `BaseError`.
+///
+namespace arg_parse_convert::exceptions {}
+
+/// @brief Contains common conversion functions.
+///
+/// @details For compatibility,  wrappers around standard library string
+///  conversion functions contained in this namespace must be used as conversion
+///  functions instead of using the corresponding standad library functions
+///  directly.
+///
+namespace arg_parse_convert::converters {}
+/// @}
 
 #endif // ARG_PARSE_CONVERT_ARG_PARSE_CONVERT_H_

@@ -20,56 +20,49 @@
 
 #include "parameter.h"
 
+#include <sstream>
+
 namespace arg_parse_convert {
 
-ParameterConfiguration ParameterConfiguration::Create(
-    const std::vector<std::string>& names, ParameterCategory category) {
-  ParameterConfiguration configuration{};
-  configuration.names_ = names;
-  configuration.category_ = category;
-  return configuration;
+namespace {
+
+// Maps integers to string representation of `ParameterConfiguration`
+// enumerators
+//
+const char* kParameterCategory[]{
+  "kPositionalParameter",
+  "kKeywordParameter",
+  "kFlag"
+};
+
 }
 
-ParameterConfiguration ParameterConfiguration::Create(
-    const std::vector<std::string>& names, ParameterCategory category,
-    int position) {
-  ParameterConfiguration configuration
-      = ParameterConfiguration::Create(names, category);
-  configuration.position_ = position;
-  return configuration;
-}
-
-std::string ParameterConfiguration::HelpString(const HelpStringFormat& format) {
+// ParameterConfiguration::DebugString
+//
+std::string ParameterConfiguration::DebugString() const {
   std::stringstream ss;
-  int description_width = format.width() - format.description_indentation();
-  std::string parameter_spacer(
-      static_cast<size_t>(format.parameter_indentation()), ' ');
-  std::string description_spacer(
-      static_cast<size_t>(format.description_indentation()), ' ');
-  if (this->category_ != ParameterCategory::kPositionalParameter) {
-    ss << parameter_spacer << this->names_.at(0);
-    for (size_t i = 1; i < this->names_.size(); ++i) {
-      ss << " | " << this->names_.at(i);
-    }
-    ss << ' ';
-  }
-  if (this->category_ != ParameterCategory::kFlag) {
-    ss << this->argument_placeholder_;
-    if (this->default_arguments_.size() > 0) {
-      ss << " ( =";
-      for (const std::string& argument : this->default_arguments_) {
-        ss << ' ' << argument;
-      }
-      ss << ')';
+  ss << "{names: [";
+  if (!names_.empty()) {
+    ss << names_.at(0);
+    for (const std::string& name : names_) {
+      ss << ", " << name;
     }
   }
-  ss << '\n';
-  for (size_t pos = 0;
-       pos < this->description_.length();
-       pos += description_width) {
-    ss << description_spacer
-       << this->description_.substr(pos, description_width) << '\n';
+  ss << "], category: "
+     << kParameterCategory[static_cast<int>(category_)]
+     << ", default arguments: [";
+  if (!default_arguments_.empty()) {
+    ss << default_arguments_.at(0);
+    for (const std::string& argument : default_arguments_) {
+      ss << ", " << argument;
+    }
   }
+  ss << "], position: " << position_
+     << ", min number of arguments: " << min_num_arguments_
+     << ", max number of arguments: " << max_num_arguments_
+     << ", description: " << description_
+     << ", argument placeholder: " << argument_placeholder_
+     << "}.";
   return ss.str();
 }
 
