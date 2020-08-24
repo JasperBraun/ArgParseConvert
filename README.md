@@ -2,7 +2,7 @@
 
 [GitHub repository.](https://github.com/JasperBraun/ArgParseConvert.git)
 
-[GitHub Pages.](https://jasperbraun.github.io/ArgParseConvert/)
+[GitHub Pages.](https://jasperbraun.github.io/ArgParseConvert/doxygen/html/index.html)
 
 Yet another argument parsing library designed mainly for personal use. This
 library provides facilities to configure positional, keyword and flag
