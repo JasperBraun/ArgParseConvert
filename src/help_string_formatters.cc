@@ -39,8 +39,8 @@ std::string FormattedDescription(const ParameterConfiguration& configuration,
   int offset{0}, text_width{width - indentation};
   std::string_view::size_type break_pos;
   std::string_view window{description.substr(0, text_width + 1)};
-  while (static_cast<int>(window.length()) > 0) {
-    if (window.length() > text_width) {
+  while (window.length() > 0) {
+    if (static_cast<int>(window.length()) > text_width) {
         //&& description.at(offset + text_width) != ' ') {
       break_pos = window.rfind(' ');
     } else {
